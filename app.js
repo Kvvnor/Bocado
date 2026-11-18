@@ -1415,6 +1415,13 @@ $("#onb").addEventListener("click",e=>{
 $("#onb").addEventListener("input",e=>{const f=e.target.dataset&&e.target.dataset.f;if(!f)return;ONB.d[f]=f==="name"?e.target.value:fromDisp(f,num(e.target.value)||null);liveLine()});
 $("#onb").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.target.id==="onbNum"||e.target.id==="onbName")){e.preventDefault();$("#onb [data-o=next]")&&$("#onb [data-o=next]").click()}});
 
+/* Sin zoom por doble toque: el segundo toque rápido sobre algo que no es un control (fondo, botón desactivado) se ignora */
+let lastTap=0;
+document.addEventListener("touchend",e=>{
+  const now=Date.now(),quick=now-lastTap<350;lastTap=now;
+  if(quick&&e.touches.length===0&&!e.target.closest("button:not([disabled]),a[href],label,input,select,textarea,[data-act]:not([disabled]),[data-o]"))e.preventDefault();
+},{passive:false});
+
 /* ---------- inicio ---------- */
 (function init(){
   const p=lsGet("profile");if(p)S.profile={...DEF_PROFILE,...p};
