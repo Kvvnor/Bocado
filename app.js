@@ -39,10 +39,11 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="18";
+const APP_VERSION="19";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
+const UNITS={"Manzana": ["manzana", "manzanas", "apple", "apples", 150], "Plátano": ["plátano", "plátanos", "banana", "bananas", 120], "Naranja": ["naranja", "naranjas", "orange", "oranges", 150], "Mandarina": ["mandarina", "mandarinas", "tangerine", "tangerines", 80], "Pera": ["pera", "peras", "pear", "pears", 170], "Durazno": ["durazno", "duraznos", "peach", "peaches", 150], "Damasco": ["damasco", "damascos", "apricot", "apricots", 35], "Ciruela": ["ciruela", "ciruelas", "plum", "plums", 65], "Kiwi": ["kiwi", "kiwis", "kiwi", "kiwis", 75], "Limón": ["limón", "limones", "lemon", "lemons", 60], "Higo": ["higo", "higos", "fig", "figs", 50], "Dátiles": ["dátil", "dátiles", "date", "dates", 24], "Palta": ["palta", "paltas", "avocado", "avocados", 140], "Chirimoya": ["chirimoya", "chirimoyas", "cherimoya", "cherimoyas", 300], "Tomate": ["tomate", "tomates", "tomato", "tomatoes", 120], "Zanahoria": ["zanahoria", "zanahorias", "carrot", "carrots", 80], "Cebolla": ["cebolla", "cebollas", "onion", "onions", 100], "Ajo": ["diente", "dientes", "clove", "cloves", 5], "Pimentón rojo": ["pimentón", "pimentones", "bell pepper", "bell peppers", 150], "Choclo cocido": ["choclo", "choclos", "ear of corn", "ears of corn", 150], "Marraqueta": ["marraqueta", "marraquetas", "roll", "rolls", 100], "Hallulla": ["hallulla", "hallullas", "flatbread", "flatbreads", 80], "Pan amasado": ["pan", "panes", "bread roll", "bread rolls", 100], "Pan de molde blanco": ["rebanada", "rebanadas", "slice", "slices", 27], "Pan de molde integral": ["rebanada", "rebanadas", "slice", "slices", 30], "Pan pita": ["pan pita", "panes pita", "pita", "pitas", 60], "Pan de hamburguesa": ["pan", "panes", "bun", "buns", 50], "Tortilla de trigo": ["tortilla", "tortillas", "tortilla", "tortillas", 40], "Tortilla de maíz": ["tortilla", "tortillas", "tortilla", "tortillas", 26], "Galletas de agua": ["galleta", "galletas", "cracker", "crackers", 4], "Papa cocida": ["papa", "papas", "potato", "potatoes", 150], "Camote cocido": ["camote", "camotes", "sweet potato", "sweet potatoes", 150], "Avena en hojuelas": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 10], "Vienesa": ["vienesa", "vienesas", "hot dog", "hot dogs", 45], "Jamón de pavo": ["lámina", "láminas", "slice", "slices", 15], "Jamón de cerdo": ["lámina", "láminas", "slice", "slices", 15], "Tocino cocido": ["tira", "tiras", "strip", "strips", 8], "Salame": ["lámina", "láminas", "slice", "slices", 5], "Mortadela": ["lámina", "láminas", "slice", "slices", 15], "Trutro de pollo asado con piel": ["trutro", "trutros", "thigh", "thighs", 120], "Chuleta de cerdo cocida": ["chuleta", "chuletas", "chop", "chops", 150], "Longaniza cocida": ["longaniza", "longanizas", "sausage", "sausages", 80], "Atún en agua (escurrido)": ["lata", "latas", "can", "cans", 120], "Atún en aceite (escurrido)": ["lata", "latas", "can", "cans", 120], "Sardinas en aceite (escurridas)": ["lata", "latas", "can", "cans", 90], "Camarones cocidos": ["camarón", "camarones", "shrimp", "shrimp", 6], "Kanikama": ["barrita", "barritas", "stick", "sticks", 17], "Huevo entero": ["huevo", "huevos", "egg", "eggs", 50], "Clara de huevo": ["clara", "claras", "egg white", "egg whites", 33], "Huevo duro": ["huevo", "huevos", "egg", "eggs", 50], "Huevo frito": ["huevo", "huevos", "egg", "eggs", 46], "Huevos revueltos": ["huevo", "huevos", "egg", "eggs", 61], "Leche entera": ["vaso", "vasos", "glass", "glasses", 200], "Leche semidescremada": ["vaso", "vasos", "glass", "glasses", 200], "Leche descremada": ["vaso", "vasos", "glass", "glasses", 200], "Leche con chocolate": ["vaso", "vasos", "glass", "glasses", 200], "Yogur natural": ["pote", "potes", "cup", "cups", 125], "Yogur con sabor": ["pote", "potes", "cup", "cups", 125], "Yogur protein": ["pote", "potes", "cup", "cups", 155], "Yogur griego natural": ["pote", "potes", "cup", "cups", 170], "Queso gauda": ["lámina", "láminas", "slice", "slices", 15], "Queso mantecoso": ["lámina", "láminas", "slice", "slices", 15], "Queso mozzarella": ["lámina", "láminas", "slice", "slices", 20], "Queso crema": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 15], "Proteína whey en polvo (aprox.)": ["scoop", "scoops", "scoop", "scoops", 30], "Almendras": ["puñado", "puñados", "handful", "handfuls", 30], "Nueces": ["puñado", "puñados", "handful", "handfuls", 30], "Maní tostado": ["puñado", "puñados", "handful", "handfuls", 30], "Castañas de cajú": ["puñado", "puñados", "handful", "handfuls", 30], "Pistachos": ["puñado", "puñados", "handful", "handfuls", 30], "Mix de frutos secos": ["puñado", "puñados", "handful", "handfuls", 30], "Mantequilla de maní": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 16], "Semillas de chía": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 12], "Linaza": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 10], "Aceite de oliva": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 13], "Aceite vegetal": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 13], "Mantequilla": ["cucharadita", "cucharaditas", "teaspoon", "teaspoons", 5], "Margarina": ["cucharadita", "cucharaditas", "teaspoon", "teaspoons", 5], "Mayonesa": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 14], "Mayonesa light": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 14], "Ketchup": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 17], "Mostaza": ["cucharadita", "cucharaditas", "teaspoon", "teaspoons", 5], "Salsa de soya": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 16], "Crema de leche": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 15], "Jugo de naranja natural": ["vaso", "vasos", "glass", "glasses", 250], "Néctar de fruta": ["vaso", "vasos", "glass", "glasses", 250], "Bebida cola": ["lata", "latas", "can", "cans", 350], "Bebida cola zero": ["lata", "latas", "can", "cans", 350], "Bebida isotónica": ["botella", "botellas", "bottle", "bottles", 500], "Café negro": ["taza", "tazas", "cup", "cups", 240], "Café con leche": ["taza", "tazas", "cup", "cups", 250], "Té": ["taza", "tazas", "cup", "cups", 240], "Cerveza": ["lata", "latas", "can", "cans", 350], "Vino tinto": ["copa", "copas", "glass", "glasses", 150], "Pisco sour": ["vaso", "vasos", "glass", "glasses", 120], "Mote con huesillo": ["vaso", "vasos", "glass", "glasses", 300], "Empanada de pino": ["empanada", "empanadas", "empanada", "empanadas", 220], "Empanada de queso frita": ["empanada", "empanadas", "empanada", "empanadas", 100], "Completo italiano": ["completo", "completos", "hot dog", "hot dogs", 250], "Churrasco italiano": ["sándwich", "sándwiches", "sandwich", "sandwiches", 300], "Barros Luco": ["sándwich", "sándwiches", "sandwich", "sandwiches", 250], "Sándwich de jamón y queso": ["sándwich", "sándwiches", "sandwich", "sandwiches", 150], "Humita": ["humita", "humitas", "humita", "humitas", 200], "Sopaipilla": ["sopaipilla", "sopaipillas", "sopaipilla", "sopaipillas", 50], "Pizza de queso": ["trozo", "trozos", "slice", "slices", 110], "Pizza de pepperoni": ["trozo", "trozos", "slice", "slices", 110], "Hamburguesa con queso": ["hamburguesa", "hamburguesas", "burger", "burgers", 180], "Pollo apanado (nuggets)": ["nugget", "nuggets", "nugget", "nuggets", 17], "Sushi (roll)": ["pieza", "piezas", "piece", "pieces", 25], "Milanesa de vacuno": ["milanesa", "milanesas", "cutlet", "cutlets", 150], "Cazuela de vacuno": ["plato", "platos", "bowl", "bowls", 500], "Cazuela de ave": ["plato", "platos", "bowl", "bowls", 500], "Porotos con riendas": ["plato", "platos", "plate", "plates", 350], "Porotos granados": ["plato", "platos", "plate", "plates", 350], "Lentejas guisadas": ["plato", "platos", "plate", "plates", 350], "Pastel de choclo": ["porción", "porciones", "serving", "servings", 350], "Charquicán": ["plato", "platos", "plate", "plates", 350], "Pollo con arroz": ["plato", "platos", "plate", "plates", 400], "Tallarines con salsa boloñesa": ["plato", "platos", "plate", "plates", 350], "Lasaña": ["porción", "porciones", "serving", "servings", 300], "Arroz chaufa": ["plato", "platos", "plate", "plates", 300], "Papas fritas": ["porción", "porciones", "serving", "servings", 120], "Galletas con chips de chocolate": ["galleta", "galletas", "cookie", "cookies", 15], "Galletas de mantequilla": ["galleta", "galletas", "cookie", "cookies", 8], "Barra de cereal": ["barra", "barras", "bar", "bars", 25], "Barra de proteína": ["barra", "barras", "bar", "bars", 50], "Alfajor": ["alfajor", "alfajores", "alfajor", "alfajores", 50], "Calzones rotos": ["unidad", "unidades", "piece", "pieces", 40], "Berlín": ["berlín", "berlines", "doughnut", "doughnuts", 90], "Donut glaseada": ["donut", "donuts", "doughnut", "doughnuts", 60], "Queque": ["trozo", "trozos", "slice", "slices", 60], "Torta de chocolate": ["trozo", "trozos", "slice", "slices", 100], "Kuchen de manzana": ["trozo", "trozos", "slice", "slices", 100], "Pan de pascua": ["trozo", "trozos", "slice", "slices", 60], "Helado de crema": ["bola", "bolas", "scoop", "scoops", 70], "Azúcar": ["cucharadita", "cucharaditas", "teaspoon", "teaspoons", 5], "Miel": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 20], "Mermelada": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 15], "Manjar": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 20], "Leche condensada": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 20], "Chocolate de leche": ["cuadrito", "cuadritos", "square", "squares", 5], "Chocolate amargo 70%": ["cuadrito", "cuadritos", "square", "squares", 5]};
 /* Alimentos básicos (232): por 100 g (bebidas por 100 ml). Valores de referencia; los marcados con 1 son promedios aproximados. */
 const CATS={fruta:tr("Frutas","Fruits"),verdura:tr("Verduras","Vegetables"),cereal:tr("Panes, cereales y papas","Bread, grains & potatoes"),carne:tr("Carnes y aves","Meat & poultry"),pescado:tr("Pescados y mariscos","Fish & seafood"),lacteo:tr("Huevos y lácteos","Eggs & dairy"),legumbre:tr("Legumbres y soya","Legumes & soy"),frutos:tr("Frutos secos y semillas","Nuts & seeds"),grasa:tr("Aceites, grasas y salsas","Oils, fats & sauces"),bebida:tr("Bebidas","Drinks"),plato:tr("Platos y comida preparada","Meals & prepared food"),snack:tr("Snacks y dulces","Snacks & sweets")};
 const BASE=[
@@ -278,7 +279,7 @@ const BASE=[
  ["snack", "Mermelada", "Jam", 250, 0.4, 63, 0.1, 15, 0],
  ["snack", "Azúcar", "Sugar", 387, 0, 100, 0, 5, 0],
  ["snack", "Miel", "Honey", 304, 0.3, 82, 0, 20, 0]
-].map(([cat,name,nameEn,kcal,p,c,f,s,a])=>({key:"base-"+slug(name),name:EN?nameEn:name,cat,per100:{kcal,p,c,f},servingG:s,approx:!!a,ml:cat==="bebida",src:"referencia"}));
+].map(([cat,name,nameEn,kcal,p,c,f,s,a])=>{const u=UNITS[name];return{key:"base-"+slug(name),name:EN?nameEn:name,cat,per100:{kcal,p,c,f},servingG:s,approx:!!a,ml:cat==="bebida",src:"referencia",unit:u?{s:EN?u[2]:u[0],p:EN?u[3]:u[1],g:u[4]}:null}});
 
 /* ---------- utilidades ---------- */
 function dstr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
@@ -364,12 +365,12 @@ function totals(entries){return entries.reduce((a,e)=>({kcal:a.kcal+num(e.kcal),
 function fromPer100(per,g){return {kcal:Math.round(per.kcal*g/100),p:r1(per.p*g/100),c:r1(per.c*g/100),f:r1(per.f*g/100)}}
 function per100Of(x,g){return g>0?{kcal:x.kcal/g*100,p:x.p/g*100,c:x.c/g*100,f:x.f/g*100}:{kcal:0,p:0,c:0,f:0}}
 function suspicious(per){const calc=per.p*4+per.c*4+per.f*9;return calc>25&&Math.abs(per.kcal-calc)/calc>0.35}
-function tableHTML(per,servingG,eaten,u){u=u||"g";
+function tableHTML(per,servingG,eaten,u,youLabel,servLabel){u=u||"g";
   const row=(label,g,you)=>{const x=fromPer100(per,g),c=you?"you":"";
     return `<div class="rl ${c}">${label}</div><div class="${c}">${fmt(x.kcal)}</div><div class="${c}">${fmt1(x.p)}</div><div class="${c}">${fmt1(x.c)}</div><div class="${c}">${fmt1(x.f)}</div>`};
   return `<div class="h rl">${tr("Cantidad","Amount")}</div><div class="h">kcal</div><div class="h">Prot</div><div class="h">Carb</div><div class="h">${tr("Grasa","Fat")}</div>`+
-    row("100 "+u,100)+(servingG&&Math.round(servingG)!==100?row(`${tr("Porción","Serving")} ${fmt1(servingG)} ${u}`,servingG):"")+
-    (eaten>0?row(`${tr("Comiste","You ate")} ${fmt1(eaten)} ${u}`,eaten,true):"");
+    row("100 "+u,100)+(servingG&&(servLabel||Math.round(servingG)!==100)?row(servLabel||`${tr("Porción","Serving")} ${fmt1(servingG)} ${u}`,servingG):"")+
+    (eaten>0?row(youLabel?`${tr("Comiste","You ate")} ${youLabel}`:`${tr("Comiste","You ate")} ${fmt1(eaten)} ${u}`,eaten,true):"");
 }
 
 /* ---------- íconos ---------- */
@@ -435,7 +436,7 @@ function renderHoy(){
   const meals=MEALS.map(([k,l])=>{
     const es=d.entries.filter(e=>normMeal(e.meal)===k);
     const kc=es.reduce((a,e)=>a+num(e.kcal),0);
-    const rows=es.map(e=>`<button class="entry" data-act="entry" data-id="${esc(e.id)}"><div><div class="nm">${esc(e.name)}</div><div class="sub">${fmt(e.grams)} ${e.ml?"ml":"g"} · P ${fmt(e.p)} · C ${fmt(e.c)} · ${tr("G","F")} ${fmt(e.f)}</div></div><span class="kc">${fmt(e.kcal)}</span></button>`).join("");
+    const rows=es.map(e=>`<button class="entry" data-act="entry" data-id="${esc(e.id)}"><div><div class="nm">${esc(e.name)}</div><div class="sub">${e.units?fmtN(e.units)+" "+(Math.abs(e.units-1)<1e-9?e.uS:e.uP)+" · ":""}${fmt(e.grams)} ${e.ml?"ml":"g"} · P ${fmt(e.p)} · C ${fmt(e.c)} · ${tr("G","F")} ${fmt(e.f)}</div></div><span class="kc">${fmt(e.kcal)}</span></button>`).join("");
     return `<div class="meal"><div class="mealhead"><h3>${l}${kc?`<span class="k">${fmt(kc)} kcal</span>`:""}</h3><button class="addmini" data-act="add" data-meal="${k}" aria-label="${tr("Añadir a","Add to")} ${l}">${IC.plus}${tr("Añadir","Add")}</button></div>${rows}</div>`;
   }).join("");
   $("#viewHoy").innerHTML=`
@@ -579,7 +580,7 @@ function findFood(key){return S.foods[key]||tempFoods[key]||BASE.find(b=>b.key==
 
 function openAdd(meal){
   S.addMeal=meal||S.addMeal||mealNow();
-  const rec=recentFoods(6).map(f=>foodRow(f,f.lastG?fmt(f.lastG)+" g":"")).join("");
+  const rec=recentFoods(6).map(f=>{const u=unitFor(f);return foodRow(f,f.lastMode==="u"&&u&&f.lastUnits?fmtN(f.lastUnits)+" "+uName(u,f.lastUnits):f.lastG?fmt(f.lastG)+(f.ml?" ml":" g"):"")}).join("");
   openSheet(`
     <h2>${tr("Añadir comida","Add food")}</h2>
     <div style="margin-top:10px">${mealChips(S.addMeal)}</div>
@@ -597,9 +598,24 @@ function openAdd(meal){
   root=>wireMealChips(root,()=>S.addMeal,v=>S.addMeal=v));
 }
 
+function unitFor(food){
+  const base=food&&food.key&&String(food.key).startsWith("base-")?BASE.find(b=>b.key===food.key):null;
+  const u=(food&&food.unit)||(base&&base.unit);
+  if(u&&u.g)return{s:u.s,p:u.p,g:u.g,generic:false};
+  if(food&&food.servingG)return{s:tr("porción","serving"),p:tr("porciones","servings"),g:food.servingG,generic:true};
+  return null;
+}
+const uName=(u,n)=>Math.abs(n-1)<1e-9?u.s:u.p;
+const cap1=s=>String(s).charAt(0).toUpperCase()+String(s).slice(1);
+const fmtN=n=>Math.abs(n-0.5)<1e-9?"½":fmt1(n);
 function openPortion(food,entry,opts){
   opts=opts||{};
-  let g=entry?num(entry.grams):(food.lastG||food.servingG||100);
+  const unit=unitFor(food);
+  const saved=S.foods[food.key]||{};
+  const gU=food.ml?"ml":"g";
+  let mode=!unit?"g":entry?(entry.units?"u":"g"):(saved.lastMode||(unit.generic?"g":"u"));
+  let n=entry&&entry.units?num(entry.units):(saved.lastUnits||1);
+  let g=entry?num(entry.grams):(mode==="u"?n*unit.g:(food.lastG||food.servingG||100));
   let meal=entry?normMeal(entry.meal):(S.addMeal||mealNow());
   const per=food.per100;
   const warn=!entry&&suspicious(per);
@@ -610,8 +626,16 @@ function openPortion(food,entry,opts){
     <p class="muted" style="font-size:13px">${food.brand?esc(food.brand)+" · ":""}${fromOFF?`${tr("Datos de","Data from")} <a href="https://world.openfoodfacts.org/product/${esc(food.barcode||"")}" target="_blank" rel="noopener" style="color:inherit">Open Food Facts</a>`:food.src==="referencia"?(food.approx?tr("Valor aproximado: promedio de recetas típicas","Approximate value: average of typical recipes"):tr("Valores de referencia","Reference values"))+(food.cat&&CATS[food.cat]?" · "+CATS[food.cat]:""):tr("Guardado por ti","Saved by you")}</p>
     ${warn?`<p class="note" style="margin-top:10px;border-color:var(--carb)">${tr("Las calorías no calzan con los macros de este producto (posible error en la base de datos). Compáralo con la etiqueta y corrígelo si hace falta.","The calories don't match this product's macros (possible database error). Compare with the label and correct it if needed.")}</p>`:""}
     <div class="stack" style="margin-top:14px">
-      <div class="field"><label for="pg">${tr("¿Cuánto comiste? (gramos o ml)","How much did you eat? (grams or ml)")}</label><input id="pg" class="input num" style="font-size:28px;height:58px" type="number" inputmode="decimal" step="any" value="${r1(g)}"></div>
-      <div class="chips">${chips.map(c=>`<button class="chip" data-g="${c}">${food.servingG&&c===Math.round(food.servingG)?`${tr("1 porción","1 serving")} · ${c} ${food.ml?"ml":"g"}`:c+(food.ml?" ml":" g")}</button>`).join("")}</div>
+      ${unit?`<div class="field"><label>${tr("Contar por","Count by")}</label><div class="seg" id="qMode"><button data-m="u" aria-pressed="${mode==="u"}">${esc(cap1(unit.p))}</button><button data-m="g" aria-pressed="${mode==="g"}">${food.ml?tr("Mililitros","Milliliters"):tr("Gramos","Grams")}</button></div></div>`:""}
+      ${unit?`<div id="qU" class="stack" style="gap:8px" ${mode!=="u"?"hidden":""}>
+        <div class="stepper qstep"><button data-q="-1" aria-label="${tr("Menos","Less")}">−</button><input id="pn" type="number" inputmode="decimal" step="any" min="0" value="${n}" aria-label="${tr("Cantidad","Amount")}"><button data-q="1" aria-label="${tr("Más","More")}">+</button></div>
+        <p class="unitline" id="pnLine"></p>
+        <div class="chips" style="justify-content:center">${[0.5,1,2,3,4].map(x=>`<button class="chip" data-n="${x}">${fmtN(x)}</button>`).join("")}</div>
+      </div>`:""}
+      <div id="qG" class="stack" style="gap:8px" ${mode!=="g"?"hidden":""}>
+        <div class="field"><label for="pg">${tr("¿Cuánto comiste? (gramos o ml)","How much did you eat? (grams or ml)")}</label><input id="pg" class="input num" style="font-size:28px;height:58px" type="number" inputmode="decimal" step="any" value="${r1(g)}"></div>
+        <div class="chips">${chips.map(c=>`<button class="chip" data-g="${c}">${food.servingG&&c===Math.round(food.servingG)?`${tr("1 porción","1 serving")} · ${c} ${gU}`:c+" "+gU}</button>`).join("")}</div>
+      </div>
       <div class="tbl" id="pres"></div>
       <div>${mealChips(meal)}</div>
       <button class="btn" id="pOk">${entry?tr("Guardar cambios","Save changes"):tr("Añadir","Add")}</button>
@@ -619,19 +643,38 @@ function openPortion(food,entry,opts){
       ${entry?`<button class="btn danger" id="pDel">${tr("Eliminar de este día","Remove from this day")}</button>`:""}
     </div>`,
   root=>{
-    const inp=root.querySelector("#pg"),btn=root.querySelector("#pOk");
-    const upd=()=>{g=num(inp.value);root.querySelector("#pres").innerHTML=tableHTML(per,food.servingG,g,food.ml?"ml":"g");
-      if(!entry)btn.textContent=g>0?`${tr("Añadir","Add")} ${fmt1(g)} ${food.ml?"ml":"g"} · ${fmt(fromPer100(per,g).kcal)} kcal`:tr("Añadir","Add")};
-    inp.addEventListener("input",upd);upd();
+    const inp=root.querySelector("#pg"),pn=root.querySelector("#pn"),btn=root.querySelector("#pOk");
+    const upd=()=>{
+      if(mode==="u"){n=Math.max(0,num(pn.value));g=r1(n*unit.g)}else g=num(inp.value);
+      const label=mode==="u"?`${fmtN(n)} ${uName(unit,n)}`:null;
+      const servLabel=unit&&!unit.generic?`1 ${unit.s} · ${fmt1(unit.g)} ${gU}`:null;
+      root.querySelector("#pres").innerHTML=tableHTML(per,unit?unit.g:food.servingG,g,gU,label,servLabel);
+      if(pn)root.querySelector("#pnLine").textContent=`${fmtN(n)} ${uName(unit,n)} = ${fmt(n*unit.g)} ${gU}`;
+      if(!entry)btn.textContent=g>0?`${tr("Añadir","Add")} ${mode==="u"?fmtN(n)+" "+uName(unit,n):fmt1(g)+" "+gU} · ${fmt(fromPer100(per,g).kcal)} kcal`:tr("Añadir","Add");
+    };
+    inp.addEventListener("input",upd);
     root.querySelectorAll("[data-g]").forEach(b=>b.addEventListener("click",()=>{inp.value=b.dataset.g;upd()}));
+    if(pn){
+      pn.addEventListener("input",upd);
+      root.querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>{let v=num(pn.value);v=b.dataset.q==="1"?(v<1?1:Math.floor(v)+1):(v>1?Math.ceil(v)-1:0.5);pn.value=v;upd()}));
+      root.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{pn.value=b.dataset.n;upd()}));
+      root.querySelectorAll("#qMode [data-m]").forEach(b=>b.addEventListener("click",()=>{
+        const m=b.dataset.m;if(m===mode)return;
+        if(m==="g"){inp.value=r1(num(pn.value)*unit.g)}else{pn.value=Math.max(0.5,Math.round(num(inp.value)/unit.g*2)/2)}
+        mode=m;root.querySelector("#qU").hidden=mode!=="u";root.querySelector("#qG").hidden=mode!=="g";
+        root.querySelectorAll("#qMode [data-m]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===mode));upd();
+      }));
+    }
+    upd();
     wireMealChips(root,()=>meal,v=>meal=v);
     btn.addEventListener("click",()=>{
       if(!(g>0)){toast(tr("Ingresa una cantidad mayor a 0","Enter an amount greater than 0"));return}
       const d=day();
       const e={id:entry?entry.id:uid(),meal,name:food.name,grams:r1(g),...fromPer100(per,g),per100:per,key:food.key,src:food.src||"guardado",ml:!!food.ml};
+      if(mode==="u"){e.units=r1(n);e.uS=unit.s;e.uP=unit.p}
       if(entry){const i=d.entries.findIndex(z=>z.id===entry.id);if(i>=0)d.entries[i]=e}else d.entries.push(e);
       saveDay();
-      if(!entry){const {uses,last,...clean}=food;upsertFood({...clean,lastG:r1(g)})}
+      if(!entry){const {uses,last,...clean}=food;upsertFood({...clean,lastG:r1(g),lastMode:mode,lastUnits:mode==="u"?r1(n):(saved.lastUnits||null)})}
       closeSheet();S.tab="hoy";render();toast(entry?tr("Cambios guardados","Changes saved"):`${tr("Añadido a","Added to")} ${MEAL_NAME[meal]}`);
     });
     const fix=root.querySelector("#pFix");
