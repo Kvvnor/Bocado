@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="17";
+const APP_VERSION="18";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -818,20 +818,26 @@ async function decodeFile(file){
 }
 
 /* Escáner en vivo */
-const SC={stream:null,on:false,canvas:null,reader:null,flip:false};
+const SC={stream:null,on:false,canvas:null,reader:null,flip:false,kill:null};
+/* iOS no guarda el permiso de cámara en apps de pantalla de inicio: mantenemos la cámara lista unos minutos para no volver a pedirlo en escaneos seguidos */
+const CAM_KEEP_MS=5*60*1000;
+function streamLive(){return!!(SC.stream&&SC.stream.getVideoTracks().some(t=>t.readyState==="live"))}
+function releaseCamera(){clearTimeout(SC.kill);SC.kill=null;if(SC.stream){SC.stream.getTracks().forEach(t=>t.stop());SC.stream=null}const v=$("#scanVideo");if(v)v.srcObject=null}
 async function startScanner(){
   closeSheet();
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){openCamFallback(tr("Este navegador no permite usar la cámara en vivo.","This browser can't use the live camera."));return}
   const box=$("#scanner"),video=$("#scanVideo");
   box.hidden=false;document.body.style.overflow="hidden";$("#scanMsg").textContent=tr("Apunta al código de barras","Point at the barcode");
-  try{
+  clearTimeout(SC.kill);SC.kill=null;
+  if(streamLive()){SC.stream.getTracks().forEach(t=>t.enabled=true)}
+  else try{
     SC.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}});
   }catch(e){
     box.hidden=true;document.body.style.overflow="";
     openCamFallback(e&&e.name==="NotAllowedError"?tr("No diste permiso para usar la cámara. Puedes activarlo en los ajustes del navegador, o usar una foto.","Camera permission was denied. You can enable it in your browser settings, or use a photo."):tr("No pude abrir la cámara.","Couldn't open the camera."));
     return;
   }
-  video.srcObject=SC.stream;
+  if(video.srcObject!==SC.stream)video.srcObject=SC.stream;
   try{await video.play()}catch(e){}
   SC.on=true;SC.canvas=SC.canvas||document.createElement("canvas");
   SC.reader=zxReader(false);
@@ -840,9 +846,10 @@ async function startScanner(){
 }
 function stopScanner(){
   SC.on=false;
-  if(SC.stream){SC.stream.getTracks().forEach(t=>t.stop());SC.stream=null}
-  const v=$("#scanVideo");v.srcObject=null;
+  if(SC.stream){SC.stream.getTracks().forEach(t=>t.enabled=false)}
+  const v=$("#scanVideo");try{v.pause()}catch(e){}
   $("#scanner").hidden=true;document.body.style.overflow="";
+  clearTimeout(SC.kill);SC.kill=setTimeout(releaseCamera,CAM_KEEP_MS);
 }
 async function scanLoop(){
   if(!SC.on)return;
@@ -1283,7 +1290,7 @@ $("#fImport").addEventListener("change",async e=>{
   try{importData(await f.text())}catch(err){toast(tr("No pude leer ese archivo","Couldn't read that file"))}
 });
 document.addEventListener("visibilitychange",()=>{
-  if(document.hidden&&SC.on)stopScanner();
+  if(document.hidden){if(SC.on)stopScanner();releaseCamera()}
   if(!document.hidden&&S.date!==today()&&S.lastSeen===S.date){S.date=today();render()}
   S.lastSeen=today();
 });
