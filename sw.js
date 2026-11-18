@@ -1,5 +1,5 @@
 /* Bocado: funciona sin internet. Cambia VERSION al subir archivos nuevos. */
-const VERSION = "bocado-v15";
+const VERSION = "bocado-v16";
 const FONTS = "bocado-fonts";
 const CORE = ["./", "./index.html", "./app.js", "./zxing.min.js", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
@@ -21,7 +21,7 @@ self.addEventListener("fetch", e => {
     // Responde al instante desde el teléfono y actualiza en segundo plano
     e.respondWith(caches.open(VERSION).then(async c => {
       const cached = await c.match(req, { ignoreSearch: true });
-      const fresh = fetch(req).then(r => { if (r.ok) c.put(req, r.clone()); return r; }).catch(() => cached);
+      const fresh = fetch(req, { cache: "no-cache" }).then(r => { if (r.ok) c.put(req, r.clone()); return r; }).catch(() => cached);
       return cached || fresh;
     }));
     return;

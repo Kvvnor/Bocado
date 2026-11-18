@@ -39,6 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
+const APP_VERSION="16";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -537,6 +538,7 @@ function renderYo(){
         <div class="field"><label for="pGlass">${tr("Tamaño de tu vaso","Your glass size")}</label><select id="pGlass" class="input" data-prof="glass">${opt(IMP?[[237,"8 oz"],[355,"12 oz"],[473,tr("16 oz (botella)","16 oz (bottle)")],[591,tr("20 oz (botella)","20 oz (bottle)")]]:[[200,"200 ml"],[250,"250 ml"],[300,"300 ml"],[500,tr("500 ml (botella)","500 ml (bottle)")]],p.glass||(IMP?237:250))}</select></div>
         <div class="field"><label for="pUnits">${tr("Unidades","Units")}</label><select id="pUnits" class="input">${[["auto",tr("Automático (según tu país)","Automatic (by your country)")+" · "+(IMP?tr("libras y pies","pounds and feet"):tr("kilos y cm","kg and cm"))],["metric",tr("Kilos y centímetros","Kilograms and centimeters")],["imperial",tr("Libras, pies y onzas","Pounds, feet and ounces")]].map(([v,l])=>`<option value="${v}" ${unitsPref()===v?"selected":""}>${l}</option>`).join("")}</select></div>
         <div class="field"><label for="pLang">${tr("Idioma","Language")}</label><select id="pLang" class="input">${[["auto",tr("Automático (idioma del teléfono)","Automatic (phone language)")],["es","Español"],["en","English"]].map(([v,l])=>`<option value="${v}" ${langPref()===v?"selected":""}>${l}</option>`).join("")}</select></div>
+        <div class="spread" style="font-size:12px;color:var(--muted);padding-top:4px"><span>${tr("Versión de la app","App version")}</span><span style="font-family:var(--mono)">v${APP_VERSION}</span></div>
         <button class="setrow" data-act="aisetup"><span>${tr("IA para fotos","AI for photos")} <small>${tr("opcional","optional")}</small></span><span class="muted">${aiProvider()?PROV_NAME[aiProvider()]+tr(" conectada"," connected"):tr("Sin conectar","Not connected")} ›</span></button>
       </section>
       <section class="card stack">
@@ -1137,16 +1139,17 @@ function openAiSetup(){
       <div class="card stack" style="gap:6px;padding:14px"><b>Gemini · ${tr("gratis","free")}</b><span class="muted" style="font-size:13px">${tr("Entra a","Go to")} <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:inherit">aistudio.google.com/apikey</a> ${tr("con tu cuenta de Google y toca “Create API key”. Tiene límite diario de uso y Google puede usar esas consultas para mejorar sus productos.","with your Google account and tap “Create API key”. It has a daily usage limit and Google may use those requests to improve its products.")}</span></div>
       <div class="card stack" style="gap:6px;padding:14px"><b>Claude · ${tr("pagado, muy barato","paid, very cheap")}</b><span class="muted" style="font-size:13px">${tr("Entra a","Go to")} <a href="https://platform.claude.com" target="_blank" rel="noopener" style="color:inherit">platform.claude.com</a>, ${tr("carga saldo y crea una llave en “API keys”. Cada foto cuesta una fracción de centavo de dólar.","add credit and create a key under “API keys”. Each photo costs a fraction of a cent.")}</span></div>
       <div class="field"><label for="kIn">${tr("Pega tu llave","Paste your key")}</label><input id="kIn" class="input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AQ.…  ·  AIza…  ·  sk-ant-…"></div>
+      <p class="note" id="kStatus" hidden></p>
       <button class="btn" id="kOk">${tr("Guardar y probar","Save and test")}</button>
       ${prov?`<button class="btn danger" id="kDel">${tr("Quitar la llave","Remove the key")}</button>`:""}
     </div>`,root=>{
     root.querySelector("#kOk").addEventListener("click",async()=>{
       const v=root.querySelector("#kIn").value.replace(/\s+/g,""),pv=aiProvider(v);
       if(!pv){toast(tr("Esa llave no parece de Gemini (AQ.… o AIza…) ni de Claude (sk-ant-…). Pégala tal cual, sin agregarle nada.","That key doesn't look like a Gemini (AQ.… or AIza…) or Claude (sk-ant-…) key. Paste it exactly as given."));return}
-      const btn=root.querySelector("#kOk");btn.disabled=true;btn.textContent=tr("Probando…","Testing…");
+      const btn=root.querySelector("#kOk"),stEl=root.querySelector("#kStatus");const say=t=>{stEl.hidden=false;stEl.textContent=t};btn.disabled=true;btn.textContent=tr("Probando…","Testing…");say(tr("Revisando la llave con ","Checking the key with ")+PROV_NAME[pv]+"…");
       try{
         if(pv==="gemini"){
-          const models=await gemListModels(v);
+          const models=await gemListModels(v);say(tr(`Llave reconocida. Modelos disponibles: ${models.join(", ")}. Probando…`,`Key recognized. Available models: ${models.join(", ")}. Testing…`));
           try{localStorage.setItem(P+"aikey",v);localStorage.setItem(P+"aimodels",JSON.stringify(models))}catch(e){}
         }
         const r=await aiJSON('Reply only with this JSON: {"ok":true}',null,v);
@@ -1158,7 +1161,7 @@ function openAiSetup(){
           try{localStorage.setItem(P+"aikey",v)}catch(x){}
           closeSheet();render();toast(e.code==='busy'||e.code==='rate'?tr(`Llave guardada: ${PROV_NAME[pv]} la reconoció, pero ahora está con mucha demanda. Prueba Describir en unos minutos.`,`Key saved: ${PROV_NAME[pv]} recognized it, but it's very busy right now. Try Describe in a few minutes.`):tr(`Llave guardada. La prueba falló: ${aiMsg(e)}`,`Key saved. The test failed: ${aiMsg(e)}`));return;
         }
-        btn.disabled=false;btn.textContent=tr("Guardar y probar","Save and test");toast(aiMsg(e)||tr("Prueba cancelada","Test cancelled"))}
+        btn.disabled=false;btn.textContent=tr("Guardar y probar","Save and test");const em=aiMsg(e)||tr("Prueba cancelada","Test cancelled");say(em+(e&&e.status?` · HTTP ${e.status}`:"")+` · v${APP_VERSION}`);toast(em)}
     });
     const del=root.querySelector("#kDel");
     if(del)del.addEventListener("click",()=>{try{localStorage.removeItem(P+"aikey");localStorage.removeItem(P+"aimodels")}catch(e){}closeSheet();render();toast(tr("Llave eliminada","Key removed"))});
@@ -1459,6 +1462,10 @@ document.addEventListener("touchend",e=>{
   document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const v=el.getAttribute("data-i18n-aria").split("|");el.setAttribute("aria-label",EN?v[1]:v[0])});
   render();
   if(!S.profile.onboarded)startOnb();
-  if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("./sw.js").catch(()=>{})}
+  if("serviceWorker" in navigator&&location.protocol==="https:"){
+    const hadController=!!navigator.serviceWorker.controller;let reloaded=false;
+    navigator.serviceWorker.addEventListener("controllerchange",()=>{if(hadController&&!reloaded&&$("#sheet").hidden&&$("#onb").hidden&&$("#scanner").hidden){reloaded=true;location.reload()}});
+    navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).then(reg=>{document.addEventListener("visibilitychange",()=>{if(!document.hidden)reg.update().catch(()=>{})})}).catch(()=>{});
+  }
 })();
 })();
