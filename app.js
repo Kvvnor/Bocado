@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="19";
+const APP_VERSION="20";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -601,9 +601,13 @@ function openAdd(meal){
 function unitFor(food){
   const base=food&&food.key&&String(food.key).startsWith("base-")?BASE.find(b=>b.key===food.key):null;
   const u=(food&&food.unit)||(base&&base.unit);
-  if(u&&u.g)return{s:u.s,p:u.p,g:u.g,generic:false};
-  if(food&&food.servingG)return{s:tr("porción","serving"),p:tr("porciones","servings"),g:food.servingG,generic:true};
-  return null;
+  const saved=(food&&S.foods[food.key])||{};
+  let r;
+  if(u&&u.g)r={s:u.s,p:u.p,baseG:u.g,generic:false};
+  else if(food&&food.servingG)r={s:tr("porción","serving"),p:tr("porciones","servings"),baseG:food.servingG,generic:true};
+  else r={s:tr("unidad","unit"),p:tr("unidades","units"),baseG:null,generic:true};
+  r.g=num(saved.unitG)||num(food&&food.unitG)||r.baseG;
+  return r;
 }
 const uName=(u,n)=>Math.abs(n-1)<1e-9?u.s:u.p;
 const cap1=s=>String(s).charAt(0).toUpperCase()+String(s).slice(1);
@@ -613,9 +617,11 @@ function openPortion(food,entry,opts){
   const unit=unitFor(food);
   const saved=S.foods[food.key]||{};
   const gU=food.ml?"ml":"g";
-  let mode=!unit?"g":entry?(entry.units?"u":"g"):(saved.lastMode||(unit.generic?"g":"u"));
+  let unitG=entry&&entry.unitG?num(entry.unitG):unit.g;
+  let mode=entry?(entry.units?"u":"g"):(saved.lastMode||(unit.generic?"g":"u"));
+  if(mode==="u"&&!unitG)mode="g";
   let n=entry&&entry.units?num(entry.units):(saved.lastUnits||1);
-  let g=entry?num(entry.grams):(mode==="u"?n*unit.g:(food.lastG||food.servingG||100));
+  let g=entry?num(entry.grams):(mode==="u"?n*unitG:(food.lastG||food.servingG||100));
   let meal=entry?normMeal(entry.meal):(S.addMeal||mealNow());
   const per=food.per100;
   const warn=!entry&&suspicious(per);
@@ -626,10 +632,10 @@ function openPortion(food,entry,opts){
     <p class="muted" style="font-size:13px">${food.brand?esc(food.brand)+" · ":""}${fromOFF?`${tr("Datos de","Data from")} <a href="https://world.openfoodfacts.org/product/${esc(food.barcode||"")}" target="_blank" rel="noopener" style="color:inherit">Open Food Facts</a>`:food.src==="referencia"?(food.approx?tr("Valor aproximado: promedio de recetas típicas","Approximate value: average of typical recipes"):tr("Valores de referencia","Reference values"))+(food.cat&&CATS[food.cat]?" · "+CATS[food.cat]:""):tr("Guardado por ti","Saved by you")}</p>
     ${warn?`<p class="note" style="margin-top:10px;border-color:var(--carb)">${tr("Las calorías no calzan con los macros de este producto (posible error en la base de datos). Compáralo con la etiqueta y corrígelo si hace falta.","The calories don't match this product's macros (possible database error). Compare with the label and correct it if needed.")}</p>`:""}
     <div class="stack" style="margin-top:14px">
-      ${unit?`<div class="field"><label>${tr("Contar por","Count by")}</label><div class="seg" id="qMode"><button data-m="u" aria-pressed="${mode==="u"}">${esc(cap1(unit.p))}</button><button data-m="g" aria-pressed="${mode==="g"}">${food.ml?tr("Mililitros","Milliliters"):tr("Gramos","Grams")}</button></div></div>`:""}
-      ${unit?`<div id="qU" class="stack" style="gap:8px" ${mode!=="u"?"hidden":""}>
+      ${true?`<div class="field"><label>${tr("Contar por","Count by")}</label><div class="seg" id="qMode"><button data-m="u" aria-pressed="${mode==="u"}">${esc(cap1(unit.p))}</button><button data-m="g" aria-pressed="${mode==="g"}">${food.ml?tr("Mililitros","Milliliters"):tr("Gramos","Grams")}</button></div></div>`:""}
+      ${true?`<div id="qU" class="stack" style="gap:8px" ${mode!=="u"?"hidden":""}>
         <div class="stepper qstep"><button data-q="-1" aria-label="${tr("Menos","Less")}">−</button><input id="pn" type="number" inputmode="decimal" step="any" min="0" value="${n}" aria-label="${tr("Cantidad","Amount")}"><button data-q="1" aria-label="${tr("Más","More")}">+</button></div>
-        <p class="unitline" id="pnLine"></p>
+        <p class="unitline" id="pnTot"></p><p class="unitline small">1 ${esc(unit.s)} = <input id="pu" class="uin" type="number" inputmode="decimal" step="any" min="0" placeholder="?" value="${unitG?r1(unitG):""}" aria-label="${tr("Peso de 1 unidad","Weight of 1 unit")}"> ${gU}</p>
         <div class="chips" style="justify-content:center">${[0.5,1,2,3,4].map(x=>`<button class="chip" data-n="${x}">${fmtN(x)}</button>`).join("")}</div>
       </div>`:""}
       <div id="qG" class="stack" style="gap:8px" ${mode!=="g"?"hidden":""}>
@@ -643,24 +649,26 @@ function openPortion(food,entry,opts){
       ${entry?`<button class="btn danger" id="pDel">${tr("Eliminar de este día","Remove from this day")}</button>`:""}
     </div>`,
   root=>{
-    const inp=root.querySelector("#pg"),pn=root.querySelector("#pn"),btn=root.querySelector("#pOk");
+    const inp=root.querySelector("#pg"),pn=root.querySelector("#pn"),pu=root.querySelector("#pu"),btn=root.querySelector("#pOk");
     const upd=()=>{
-      if(mode==="u"){n=Math.max(0,num(pn.value));g=r1(n*unit.g)}else g=num(inp.value);
+      unitG=num(pu.value);
+      if(mode==="u"){n=Math.max(0,num(pn.value));g=r1(n*unitG)}else g=num(inp.value);
       const label=mode==="u"?`${fmtN(n)} ${uName(unit,n)}`:null;
-      const servLabel=unit&&!unit.generic?`1 ${unit.s} · ${fmt1(unit.g)} ${gU}`:null;
-      root.querySelector("#pres").innerHTML=tableHTML(per,unit?unit.g:food.servingG,g,gU,label,servLabel);
-      if(pn)root.querySelector("#pnLine").textContent=`${fmtN(n)} ${uName(unit,n)} = ${fmt(n*unit.g)} ${gU}`;
+      const servLabel=`1 ${unit.s} · ${fmt1(unitG)} ${gU}`;
+      root.querySelector("#pres").innerHTML=tableHTML(per,unitG||food.servingG,g,gU,label,unitG?servLabel:null);
+      root.querySelector("#pnTot").textContent=unitG?`${fmtN(n)} ${uName(unit,n)} = ${fmt(n*unitG)} ${gU}`:tr("¿Cuánto pesa 1 "+unit.s+"?","How much does 1 "+unit.s+" weigh?");
+      pu.classList.toggle("need",!unitG);
       if(!entry)btn.textContent=g>0?`${tr("Añadir","Add")} ${mode==="u"?fmtN(n)+" "+uName(unit,n):fmt1(g)+" "+gU} · ${fmt(fromPer100(per,g).kcal)} kcal`:tr("Añadir","Add");
     };
     inp.addEventListener("input",upd);
     root.querySelectorAll("[data-g]").forEach(b=>b.addEventListener("click",()=>{inp.value=b.dataset.g;upd()}));
     if(pn){
-      pn.addEventListener("input",upd);
+      pn.addEventListener("input",upd);pu.addEventListener("input",upd);
       root.querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>{let v=num(pn.value);v=b.dataset.q==="1"?(v<1?1:Math.floor(v)+1):(v>1?Math.ceil(v)-1:0.5);pn.value=v;upd()}));
       root.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{pn.value=b.dataset.n;upd()}));
       root.querySelectorAll("#qMode [data-m]").forEach(b=>b.addEventListener("click",()=>{
         const m=b.dataset.m;if(m===mode)return;
-        if(m==="g"){inp.value=r1(num(pn.value)*unit.g)}else{pn.value=Math.max(0.5,Math.round(num(inp.value)/unit.g*2)/2)}
+        if(m==="g"){if(unitG)inp.value=r1(num(pn.value)*unitG)}else{pn.value=unitG?Math.max(0.5,Math.round(num(inp.value)/unitG*2)/2):1}
         mode=m;root.querySelector("#qU").hidden=mode!=="u";root.querySelector("#qG").hidden=mode!=="g";
         root.querySelectorAll("#qMode [data-m]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===mode));upd();
       }));
@@ -668,13 +676,14 @@ function openPortion(food,entry,opts){
     upd();
     wireMealChips(root,()=>meal,v=>meal=v);
     btn.addEventListener("click",()=>{
+      if(mode==="u"&&!(unitG>0)){toast(tr("Indica cuánto pesa 1 "+unit.s,"Enter how much 1 "+unit.s+" weighs"));pu.focus();return}
       if(!(g>0)){toast(tr("Ingresa una cantidad mayor a 0","Enter an amount greater than 0"));return}
       const d=day();
       const e={id:entry?entry.id:uid(),meal,name:food.name,grams:r1(g),...fromPer100(per,g),per100:per,key:food.key,src:food.src||"guardado",ml:!!food.ml};
-      if(mode==="u"){e.units=r1(n);e.uS=unit.s;e.uP=unit.p}
+      if(mode==="u"){e.units=r1(n);e.uS=unit.s;e.uP=unit.p;e.unitG=r1(unitG)}
       if(entry){const i=d.entries.findIndex(z=>z.id===entry.id);if(i>=0)d.entries[i]=e}else d.entries.push(e);
       saveDay();
-      if(!entry){const {uses,last,...clean}=food;upsertFood({...clean,lastG:r1(g),lastMode:mode,lastUnits:mode==="u"?r1(n):(saved.lastUnits||null)})}
+      if(!entry){const {uses,last,...clean}=food;upsertFood({...clean,lastG:r1(g),lastMode:mode,lastUnits:mode==="u"?r1(n):(saved.lastUnits||null),unitG:unitG&&Math.abs(unitG-(unit.baseG||0))>1e-9?r1(unitG):null})}
       closeSheet();S.tab="hoy";render();toast(entry?tr("Cambios guardados","Changes saved"):`${tr("Añadido a","Added to")} ${MEAL_NAME[meal]}`);
     });
     const fix=root.querySelector("#pFix");
