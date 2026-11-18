@@ -1004,14 +1004,16 @@ async function aiJSON(prompt,blob,keyOverride){
       const parts=[{text:prompt}];
       if(b64)parts.push({inline_data:{mime_type:"image/jpeg",data:b64}});
       let last=null;
-      for(const model of["gemini-flash-latest","gemini-2.5-flash"]){
+      for(const model of["gemini-flash-latest","gemini-flash-lite-latest","gemini-2.5-flash","gemini-2.5-flash-lite"]){
         let r;
         try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",signal:AI.abort.signal,headers:{"content-type":"application/json","x-goog-api-key":k},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})})}
         catch(e){throw{code:e&&e.name==="AbortError"?"abort":"net"}}
         const j=await r.json().catch(()=>({}));
-        if(r.status===404){last={code:"http"};continue}
-        if(!r.ok){const m=(j.error&&j.error.message)||"",st=(j.error&&j.error.status)||"";
-          throw{code:/API_KEY_INVALID|API key not valid|UNAUTHENTICATED/i.test(m)||r.status===401||r.status===403?"badkey":r.status===429||st==="RESOURCE_EXHAUSTED"?"rate":"http",msg:m}}
+        const m=(j.error&&j.error.message)||"",st=(j.error&&j.error.status)||"";
+        if(r.status===404){last=last||{code:"http",msg:m};continue}
+        if(r.status===503||r.status===500||st==="UNAVAILABLE"||/high demand|overloaded/i.test(m)){last={code:"busy"};await sleep(400);continue}
+        if(r.status===429||st==="RESOURCE_EXHAUSTED"){last={code:"rate"};continue}
+        if(!r.ok)throw{code:/API_KEY_INVALID|API key not valid|UNAUTHENTICATED/i.test(m)||r.status===401||r.status===403?"badkey":"http",msg:m};
         const c=j.candidates&&j.candidates[0];
         text=c&&c.content&&Array.isArray(c.content.parts)?c.content.parts.map(p=>p.text||"").join(""):"";
         last=null;break;
@@ -1026,6 +1028,7 @@ function aiMsg(e){
   return{nokey:tr("Primero conecta una llave de IA en Yo → IA para fotos.","First connect an AI key in Profile → AI for photos."),
     badkey:tr("La llave no es válida o no tiene permiso. Revísala en Yo → IA para fotos.","The key isn't valid or lacks permission. Check it in Profile → AI for photos."),
     rate:aiProvider()==="gemini"?tr("Llegaste al límite gratuito de Gemini por ahora. Espera un rato y vuelve a intentar.","You've hit Gemini's free limit for now. Wait a while and try again."):tr("Demasiadas consultas seguidas. Espera un minuto y vuelve a intentar.","Too many requests in a row. Wait a minute and try again."),
+    busy:tr("Gemini está con mucha demanda en este momento. Suele pasar rápido: intenta de nuevo en unos minutos.","Gemini is very busy right now. It usually passes quickly: try again in a few minutes."),
     credit:tr("Tu cuenta de Claude no tiene crédito. Carga saldo en la consola de Claude.","Your Claude account has no credit. Add balance in the Claude console."),
     net:tr("Sin conexión a internet.","No internet connection."),parse:tr("No pude interpretar la respuesta. Intenta de nuevo.","Couldn't understand the response. Try again."),abort:null
   }[c]??(tr("No funcionó","That didn't work")+(e&&e.msg?": "+e.msg:tr(". Intenta de nuevo.",". Try again.")));
@@ -1130,7 +1133,12 @@ function openAiSetup(){
         if(!r||r.ok!==true)throw{code:"parse"};
         try{localStorage.setItem(P+"aikey",v)}catch(e){}
         closeSheet();render();toast(tr(`Listo: ${PROV_NAME[pv]} conectado`,`Done: ${PROV_NAME[pv]} connected`));
-      }catch(e){btn.disabled=false;btn.textContent=tr("Guardar y probar","Save and test");toast(aiMsg(e)||tr("Prueba cancelada","Test cancelled"))}
+      }catch(e){
+        if(e&&(e.code==="busy"||e.code==="rate")){
+          try{localStorage.setItem(P+"aikey",v)}catch(x){}
+          closeSheet();render();toast(tr(`Llave guardada: ${PROV_NAME[pv]} la reconoció, pero ahora está con mucha demanda. Prueba Describir en unos minutos.`,`Key saved: ${PROV_NAME[pv]} recognized it, but it's very busy right now. Try Describe in a few minutes.`));return;
+        }
+        btn.disabled=false;btn.textContent=tr("Guardar y probar","Save and test");toast(aiMsg(e)||tr("Prueba cancelada","Test cancelled"))}
     });
     const del=root.querySelector("#kDel");
     if(del)del.addEventListener("click",()=>{try{localStorage.removeItem(P+"aikey")}catch(e){}closeSheet();render();toast(tr("Llave eliminada","Key removed"))});
