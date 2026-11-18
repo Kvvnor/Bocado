@@ -965,7 +965,7 @@ function openNewProduct(code,pre,msg){
 /* ---------- IA con llave propia (Gemini o Claude) ---------- */
 const AI={abort:null};
 const aiKey=()=>{try{return localStorage.getItem(P+"aikey")||""}catch(e){return""}};
-function aiProvider(k){k=k||aiKey();if(/^sk-ant-/.test(k))return"claude";if(/^AIza/.test(k))return"gemini";return null}
+function aiProvider(k){k=k||aiKey();if(/^sk-ant-/.test(k))return"claude";if(/^(AIza|AQ\.)/.test(k))return"gemini";return null}
 const PROV_NAME={claude:"Claude",gemini:"Gemini"};
 function blobToB64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(blob)})}
 async function toJpeg(file,max){
@@ -1006,12 +1006,12 @@ async function aiJSON(prompt,blob,keyOverride){
       let last=null;
       for(const model of["gemini-flash-latest","gemini-2.5-flash"]){
         let r;
-        try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(k)}`,{method:"POST",signal:AI.abort.signal,headers:{"content-type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})})}
+        try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",signal:AI.abort.signal,headers:{"content-type":"application/json","x-goog-api-key":k},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})})}
         catch(e){throw{code:e&&e.name==="AbortError"?"abort":"net"}}
         const j=await r.json().catch(()=>({}));
         if(r.status===404){last={code:"http"};continue}
         if(!r.ok){const m=(j.error&&j.error.message)||"",st=(j.error&&j.error.status)||"";
-          throw{code:/API_KEY_INVALID|API key not valid/i.test(m)||r.status===403?"badkey":r.status===429||st==="RESOURCE_EXHAUSTED"?"rate":"http",msg:m}}
+          throw{code:/API_KEY_INVALID|API key not valid|UNAUTHENTICATED/i.test(m)||r.status===401||r.status===403?"badkey":r.status===429||st==="RESOURCE_EXHAUSTED"?"rate":"http",msg:m}}
         const c=j.candidates&&j.candidates[0];
         text=c&&c.content&&Array.isArray(c.content.parts)?c.content.parts.map(p=>p.text||"").join(""):"";
         last=null;break;
@@ -1117,13 +1117,13 @@ function openAiSetup(){
     <div class="stack" style="margin-top:14px">
       <div class="card stack" style="gap:6px;padding:14px"><b>Gemini · ${tr("gratis","free")}</b><span class="muted" style="font-size:13px">${tr("Entra a","Go to")} <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:inherit">aistudio.google.com/apikey</a> ${tr("con tu cuenta de Google y toca “Create API key”. Tiene límite diario de uso y Google puede usar esas consultas para mejorar sus productos.","with your Google account and tap “Create API key”. It has a daily usage limit and Google may use those requests to improve its products.")}</span></div>
       <div class="card stack" style="gap:6px;padding:14px"><b>Claude · ${tr("pagado, muy barato","paid, very cheap")}</b><span class="muted" style="font-size:13px">${tr("Entra a","Go to")} <a href="https://platform.claude.com" target="_blank" rel="noopener" style="color:inherit">platform.claude.com</a>, ${tr("carga saldo y crea una llave en “API keys”. Cada foto cuesta una fracción de centavo de dólar.","add credit and create a key under “API keys”. Each photo costs a fraction of a cent.")}</span></div>
-      <div class="field"><label for="kIn">${tr("Pega tu llave","Paste your key")}</label><input id="kIn" class="input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza…  ${tr("o","or")}  sk-ant-…"></div>
+      <div class="field"><label for="kIn">${tr("Pega tu llave","Paste your key")}</label><input id="kIn" class="input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AQ.…  ·  AIza…  ·  sk-ant-…"></div>
       <button class="btn" id="kOk">${tr("Guardar y probar","Save and test")}</button>
       ${prov?`<button class="btn danger" id="kDel">${tr("Quitar la llave","Remove the key")}</button>`:""}
     </div>`,root=>{
     root.querySelector("#kOk").addEventListener("click",async()=>{
-      const v=root.querySelector("#kIn").value.trim(),pv=aiProvider(v);
-      if(!pv){toast(tr("Esa llave no parece de Gemini (AIza…) ni de Claude (sk-ant-…)","That key doesn't look like a Gemini (AIza…) or Claude (sk-ant-…) key"));return}
+      const v=root.querySelector("#kIn").value.replace(/\s+/g,""),pv=aiProvider(v);
+      if(!pv){toast(tr("Esa llave no parece de Gemini (AQ.… o AIza…) ni de Claude (sk-ant-…). Pégala tal cual, sin agregarle nada.","That key doesn't look like a Gemini (AQ.… or AIza…) or Claude (sk-ant-…) key. Paste it exactly as given."));return}
       const btn=root.querySelector("#kOk");btn.disabled=true;btn.textContent=tr("Probando…","Testing…");
       try{
         const r=await aiJSON('Reply only with this JSON: {"ok":true}',null,v);
