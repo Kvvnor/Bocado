@@ -1,5 +1,5 @@
 /* Bocado: funciona sin internet. Cambia VERSION al subir archivos nuevos. */
-const VERSION = "bocado-v14";
+const VERSION = "bocado-v15";
 const FONTS = "bocado-fonts";
 const CORE = ["./", "./index.html", "./app.js", "./zxing.min.js", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
