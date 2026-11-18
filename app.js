@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="16";
+const APP_VERSION="17";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -1049,7 +1049,7 @@ function aiMsg(e){
     busy:tr("Gemini está con mucha demanda en este momento. Suele pasar rápido: intenta de nuevo en unos minutos.","Gemini is very busy right now. It usually passes quickly: try again in a few minutes."),
     credit:tr("Tu cuenta de Claude no tiene crédito. Carga saldo en la consola de Claude.","Your Claude account has no credit. Add balance in the Claude console."),
     net:tr("Sin conexión a internet.","No internet connection."),parse:tr("No pude interpretar la respuesta. Intenta de nuevo.","Couldn't understand the response. Try again."),abort:null
-  }[c]??(tr("No funcionó","That didn't work")+(e&&e.msg?": "+e.msg:(e&&e.status?` (HTTP ${e.status})`:tr(". Intenta de nuevo.",". Try again."))));
+  }[c]??(tr("No funcionó","That didn't work")+(e&&e.msg?": "+e.msg:(e&&e.status?` (HTTP ${e.status})`:"")+(e&&e.code?` [${e.code}]`:"")+(e&&e.msg||e&&e.status?"":tr(". Intenta de nuevo.",". Try again."))));
 }
 function aiFail(e,extra){
   const m=aiMsg(e);if(m===null){closeSheet();return}
@@ -1462,7 +1462,7 @@ document.addEventListener("touchend",e=>{
   document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const v=el.getAttribute("data-i18n-aria").split("|");el.setAttribute("aria-label",EN?v[1]:v[0])});
   render();
   if(!S.profile.onboarded)startOnb();
-  if("serviceWorker" in navigator&&location.protocol==="https:"){
+  if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost")){
     const hadController=!!navigator.serviceWorker.controller;let reloaded=false;
     navigator.serviceWorker.addEventListener("controllerchange",()=>{if(hadController&&!reloaded&&$("#sheet").hidden&&$("#onb").hidden&&$("#scanner").hidden){reloaded=true;location.reload()}});
     navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).then(reg=>{document.addEventListener("visibilitychange",()=>{if(!document.hidden)reg.update().catch(()=>{})})}).catch(()=>{});
