@@ -105,13 +105,16 @@ button{cursor:pointer}
 .pm button{width:34px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--soft);font-weight:600}
 
 /* Comidas */
-.meal{padding:6px 0}
-.meal + .meal{border-top:1px solid var(--line)}
+.meals{display:flex;flex-direction:column;gap:10px}
+.meal{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px 16px}
 .mealhead{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.meal.none .mealhead h3{color:var(--muted);font-weight:500}
+.mrows{border-top:1px solid var(--line);padding:2px 0}
+.mrows .entry + .entry{border-top:1px dashed var(--line);border-radius:0}
 .mealhead h3{margin:0;font-size:15px;font-weight:600}
 .mealhead .k{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:8px}
 .addmini{border:1px solid var(--line);background:var(--soft);border-radius:10px;height:30px;padding:0 10px;font-size:13px;display:inline-flex;align-items:center;gap:4px}
-.entry{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;padding:8px 0;border-radius:10px}
+.entry{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;padding:10px 0;border-radius:10px}
 .entry .nm{font-weight:500;overflow-wrap:anywhere}
 .entry .sub{font-size:12px;color:var(--muted);font-family:var(--mono)}
 .entry .kc{margin-left:auto;font-family:var(--display);font-variation-settings:"wdth" 70;font-weight:700;font-size:20px;white-space:nowrap}

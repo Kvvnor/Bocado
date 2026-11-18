@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="20";
+const APP_VERSION="21";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -436,8 +436,8 @@ function renderHoy(){
   const meals=MEALS.map(([k,l])=>{
     const es=d.entries.filter(e=>normMeal(e.meal)===k);
     const kc=es.reduce((a,e)=>a+num(e.kcal),0);
-    const rows=es.map(e=>`<button class="entry" data-act="entry" data-id="${esc(e.id)}"><div><div class="nm">${esc(e.name)}</div><div class="sub">${e.units?fmtN(e.units)+" "+(Math.abs(e.units-1)<1e-9?e.uS:e.uP)+" · ":""}${fmt(e.grams)} ${e.ml?"ml":"g"} · P ${fmt(e.p)} · C ${fmt(e.c)} · ${tr("G","F")} ${fmt(e.f)}</div></div><span class="kc">${fmt(e.kcal)}</span></button>`).join("");
-    return `<div class="meal"><div class="mealhead"><h3>${l}${kc?`<span class="k">${fmt(kc)} kcal</span>`:""}</h3><button class="addmini" data-act="add" data-meal="${k}" aria-label="${tr("Añadir a","Add to")} ${l}">${IC.plus}${tr("Añadir","Add")}</button></div>${rows}</div>`;
+    const rows=es.map(e=>`<button class="entry" data-act="entry" data-id="${esc(e.id)}"><div><div class="nm">${esc(e.name)}</div><div class="sub">${[e.units?fmtN(e.units)+" "+(Math.abs(e.units-1)<1e-9?e.uS:e.uP):"",`${fmt(e.grams)} ${e.ml?"ml":"g"}`,`P ${fmt(e.p)}`,`C ${fmt(e.c)}`,`${tr("G","F")} ${fmt(e.f)}`].filter(Boolean).map(x=>esc(x).replace(/ /g,"\u00a0")).join(" · ")}</div></div><span class="kc">${fmt(e.kcal)}</span></button>`).join("");
+    return `<div class="meal${es.length?"":" none"}"><div class="mealhead"><h3>${l}${kc?`<span class="k">${fmt(kc)} kcal</span>`:""}</h3><button class="addmini" data-act="add" data-meal="${k}" aria-label="${tr("Añadir a","Add to")} ${l}">${IC.plus}${tr("Añadir","Add")}</button></div>${rows?`<div class="mrows">${rows}</div>`:""}</div>`;
   }).join("");
   $("#viewHoy").innerHTML=`
     <header class="top">
@@ -445,7 +445,7 @@ function renderHoy(){
       <div><span class="label">${esc(sub)}</span><h1>${esc(dateTitle(S.date))}</h1></div>
       <button class="iconbtn" data-act="day" data-d="1" aria-label="${tr("Día siguiente","Next day")}" ${isToday?"disabled":""}>${IC.right}</button>
     </header>
-    <div class="stack">${hero}${water}<section class="card" style="padding:4px 16px 8px">${meals}</section>
+    <div class="stack">${hero}${water}<section class="meals">${meals}</section>
     ${!isToday?`<button class="btn ghost" data-act="gotoday">${tr("Volver a hoy","Back to today")}</button>`:""}</div>`;
 }
 function avatarSVG(o){
