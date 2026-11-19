@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="24";
+const APP_VERSION="25";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -985,10 +985,9 @@ async function startScanner(){
 }
 function stopScanner(){
   SC.on=false;
-  if(SC.stream){SC.stream.getTracks().forEach(t=>t.enabled=false)}
   const v=$("#scanVideo");try{v.pause()}catch(e){}
   $("#scanner").hidden=true;document.body.style.overflow="";
-  clearTimeout(SC.kill);SC.kill=setTimeout(releaseCamera,CAM_KEEP_MS);
+  releaseCamera(); // apaga la cámara al tiro: así iOS quita el indicador rojo
 }
 async function scanLoop(){
   if(!SC.on)return;
