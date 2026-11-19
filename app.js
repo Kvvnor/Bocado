@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="25";
+const APP_VERSION="26";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -1148,8 +1148,8 @@ async function aiJSON(prompt,blob,keyOverride){
   const k=keyOverride||aiKey(),prov=aiProvider(k);
   if(!prov)throw{code:"nokey"};
   const b64=blob?await blobToB64(blob):null;
-  AI.abort=new AbortController();
-  const tm=setTimeout(()=>AI.abort&&AI.abort.abort(),60000);
+  AI.abort=new AbortController();AI.timedOut=false;AI.userCancel=false;
+  const tm=setTimeout(()=>{AI.timedOut=true;AI.abort&&AI.abort.abort()},90000);
   try{
     let text="";
     if(prov==="claude"){
@@ -1158,7 +1158,7 @@ async function aiJSON(prompt,blob,keyOverride){
       content.push({type:"text",text:prompt});
       let r;
       try{r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal:AI.abort.signal,headers:{"x-api-key":k,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true","content-type":"application/json"},body:JSON.stringify({model:"claude-haiku-5-5",max_tokens:1500,messages:[{role:"user",content}]})})}
-      catch(e){throw{code:e&&e.name==="AbortError"?"abort":"net"}}
+      catch(e){throw{code:AI.userCancel?"abort":AI.timedOut?"slow":e&&e.name==="AbortError"?"abort":"net"}}
       const j=await r.json().catch(()=>({}));
       if(!r.ok){const m=(j.error&&j.error.message)||"";throw{code:r.status===401||r.status===403?"badkey":r.status===429||r.status===529?"rate":/credit|billing|balance/i.test(m)?"credit":"http",msg:m}}
       text=(j.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
@@ -1166,18 +1166,30 @@ async function aiJSON(prompt,blob,keyOverride){
       const parts=[{text:prompt}];
       if(b64)parts.push({inline_data:{mime_type:"image/jpeg",data:b64}});
       let last=null;
+      const think=m=>/gemini-(1|2)\./.test(m)?(/pro/.test(m)?null:{thinkingBudget:0}):{thinkingLevel:"low"};
       for(const model of gemModels()){
-        let r;
-        try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",signal:AI.abort.signal,headers:{"content-type":"application/json","x-goog-api-key":k},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{responseMimeType:"application/json",temperature:0.2}})})}
-        catch(e){throw{code:e&&e.name==="AbortError"?"abort":"net"}}
-        const j=await r.json().catch(()=>({}));
-        const m=(j.error&&j.error.message)||"",st=(j.error&&j.error.status)||"";
+        if(AI.timedOut)break;
+        let tc=think(model),r,j,m="",st="";
+        for(let attempt=0;attempt<2;attempt++){
+          const gc={responseMimeType:"application/json",temperature:0.2};if(tc)gc.thinkingConfig=tc;
+          const one=new AbortController(),stop=()=>one.abort();AI.abort.signal.addEventListener("abort",stop);
+          const t1=setTimeout(()=>{one.slow=true;one.abort()},35000);
+          try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:"POST",signal:one.signal,headers:{"content-type":"application/json","x-goog-api-key":k},body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:gc})})}
+          catch(e){
+            if(one.slow&&!AI.timedOut&&!AI.userCancel){r=null;break}
+            throw{code:AI.userCancel?"abort":AI.timedOut||one.slow?"slow":e&&e.name==="AbortError"?"abort":"net"};
+          }finally{clearTimeout(t1);AI.abort.signal.removeEventListener("abort",stop)}
+          j=await r.json().catch(()=>({}));m=(j.error&&j.error.message)||"";st=(j.error&&j.error.status)||"";
+          if(r.status===400&&tc&&/think/i.test(m)){tc=null;continue}
+          break;
+        }
+        if(!r){last={code:"slow"};continue}
         if(r.status===404||(r.status===400&&/not found|not supported|is not available|deprecated/i.test(m))){last=last||{code:"http",msg:m||("modelo "+model+" no disponible"),status:r.status};continue}
         if(r.status===503||r.status===500||st==="UNAVAILABLE"||/high demand|overloaded/i.test(m)){last={code:"busy"};await sleep(400);continue}
         if(r.status===429||st==="RESOURCE_EXHAUSTED"){last={code:"rate"};continue}
         if(!r.ok)throw{code:/API_KEY_INVALID|API key not valid|UNAUTHENTICATED/i.test(m)||r.status===401||r.status===403?"badkey":"http",msg:m||(model+" · HTTP "+r.status),status:r.status};
         const c=j.candidates&&j.candidates[0];
-        text=c&&c.content&&Array.isArray(c.content.parts)?c.content.parts.map(p=>p.text||"").join(""):"";
+        text=c&&c.content&&Array.isArray(c.content.parts)?c.content.parts.filter(p=>!p.thought).map(p=>p.text||"").join(""):"";
         last=null;break;
       }
       if(last)throw last;
@@ -1188,13 +1200,17 @@ async function aiJSON(prompt,blob,keyOverride){
 }
 function aiMsg(e){
   const c=e&&e.code;
-  return{nokey:tr("Primero conecta una llave de IA en Yo → IA para fotos.","First connect an AI key in Profile → AI for photos."),
+  const known={nokey:tr("Primero conecta una llave de IA en Yo → IA para fotos.","First connect an AI key in Profile → AI for photos."),
     badkey:tr("La llave no es válida o no tiene permiso. Revísala en Yo → IA para fotos.","The key isn't valid or lacks permission. Check it in Profile → AI for photos."),
     rate:aiProvider()==="gemini"?tr("Llegaste al límite gratuito de Gemini por ahora. Espera un rato y vuelve a intentar.","You've hit Gemini's free limit for now. Wait a while and try again."):tr("Demasiadas consultas seguidas. Espera un minuto y vuelve a intentar.","Too many requests in a row. Wait a minute and try again."),
     busy:tr("Gemini está con mucha demanda en este momento. Suele pasar rápido: intenta de nuevo en unos minutos.","Gemini is very busy right now. It usually passes quickly: try again in a few minutes."),
     credit:tr("Tu cuenta de Claude no tiene crédito. Carga saldo en la consola de Claude.","Your Claude account has no credit. Add balance in the Claude console."),
+    slow:tr("La IA tardó demasiado en responder. Suele ser algo momentáneo: intenta de nuevo en un rato.","The AI took too long to respond. It is usually temporary: try again in a bit."),
     net:tr("Sin conexión a internet.","No internet connection."),parse:tr("No pude interpretar la respuesta. Intenta de nuevo.","Couldn't understand the response. Try again."),abort:null
-  }[c]??(tr("No funcionó","That didn't work")+(e&&e.msg?": "+e.msg:(e&&e.status?` (HTTP ${e.status})`:"")+(e&&e.code?` [${e.code}]`:"")+(e&&e.msg||e&&e.status?"":tr(". Intenta de nuevo.",". Try again."))));
+  }[c];
+  if(c==="abort")return null;
+  if(known!==undefined)return known;
+  return (tr("No funcionó","That didn't work")+(e&&e.msg?": "+e.msg:(e&&e.status?` (HTTP ${e.status})`:"")+(e&&e.code?` [${e.code}]`:"")+(e&&e.msg||e&&e.status?"":tr(". Intenta de nuevo.",". Try again."))));
 }
 function aiFail(e,extra){
   const m=aiMsg(e);if(m===null){closeSheet();return}
@@ -1214,7 +1230,7 @@ function cleanItems(v){
 async function runPlate(file){
   aiLoading(tr("Analizando tu plato…","Analyzing your meal…"));
   try{
-    const blob=await toJpeg(file,1280);
+    const blob=await toJpeg(file,1024);
     const v=await aiJSON(tr("Eres nutricionista. Identifica cada alimento o preparación visible en la foto y estima su peso y su aporte nutricional. Si no hay comida en la imagen, devuelve items vacío y explícalo en note.\n","You are a nutritionist. Identify each food or dish visible in the photo and estimate its weight and nutrition. If there is no food in the image, return empty items and explain in note.\n")+ITEMS_FORMAT,blob);
     if($("#sheet").hidden)return;
     showAiItems(cleanItems(v),v&&v.note);
@@ -1406,7 +1422,7 @@ document.addEventListener("click",e=>{
   if(a==="aisetup"){openAiSetup();return}
   if(a==="describe"){openDescribe();return}
   if(a==="newmanual"){openNewProduct(S.pendingCode,S.pendingPre,tr("Copia los valores de la etiqueta.","Copy the values from the label."));return}
-  if(a==="aicancel"){if(AI.abort)AI.abort.abort();closeSheet();return}
+  if(a==="aicancel"){AI.userCancel=true;if(AI.abort)AI.abort.abort();closeSheet();return}
 });
 document.addEventListener("change",e=>{
   if(e.target.id==="pLang"){setLang(e.target.value);return}
