@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="22";
+const APP_VERSION="23";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -716,25 +716,41 @@ function historyDays(){
 const amountOf=e=>e.units?`${fmtN(e.units)} ${Math.abs(e.units-1)<1e-9?e.uS:e.uP}`:`${fmt(e.grams)} ${e.ml?"ml":"g"}`;
 function openHistory(){
   const days=historyDays();
+  let filt=S.histMeal||"all";
+  const baseMeal=S.addMeal||mealNow();
+  const chipsH=()=>`<div class="chips catchips hchips">${[["all",tr("Todas","All")],...MEALS].map(([k,l])=>`<button class="chip" data-hm="${k}" aria-pressed="${k===filt}">${l}</button>`).join("")}</div>`;
   openSheet(`<h2>${tr("Historial","History")}</h2>
     <p class="muted" style="font-size:13px;margin-top:4px">${tr("Toca un alimento para volver a añadirlo con la misma cantidad.","Tap a food to add it again with the same amount.")}</p>
-    <div style="margin-top:10px">${mealChips(S.addMeal)}</div>
+    <div style="margin-top:10px" id="hchips">${chipsH()}</div>
     <input id="hq" class="input" style="margin-top:10px" type="search" placeholder="${tr("Buscar en lo que has comido","Search what you've eaten")}" aria-label="${tr("Buscar en el historial","Search history")}">
     <div id="hlist" style="margin-top:4px"></div>`,root=>{
-    wireMealChips(root,()=>S.addMeal,v=>S.addMeal=v);
-    const draw=q=>{
-      const toks=String(q||"").trim()?slug(q).split("-").filter(Boolean):[];
+    const q=root.querySelector("#hq");
+    const row=(e,d,showMeal)=>`<button class="li" data-act="hist" data-d="${d}" data-id="${esc(e.id)}"><div><div>${esc(e.name)}</div><div class="muted" style="font-size:12px">${showMeal?esc(MEAL_NAME[normMeal(e.meal)])+" · ":""}${esc(amountOf(e))}</div></div><span class="k">${fmt(e.kcal)} kcal</span></button>`;
+    const draw=()=>{
+      const v=q.value,toks=String(v||"").trim()?slug(v).split("-").filter(Boolean):[];
       const html=days.map(({d,es})=>{
-        const list=toks.length?es.filter(e=>{const n=slug(e.name);return toks.every(t=>n.includes(t))}):es;
+        let list=filt==="all"?es:es.filter(e=>normMeal(e.meal)===filt);
+        if(toks.length)list=list.filter(e=>{const n=slug(e.name);return toks.every(t=>n.includes(t))});
         if(!list.length)return "";
-        const kc=es.reduce((a,e)=>a+num(e.kcal),0);
+        const kc=(filt==="all"?es:es.filter(e=>normMeal(e.meal)===filt)).reduce((a,e)=>a+num(e.kcal),0);
         const sub=d===today()||d===addDays(today(),-1)?new Intl.DateTimeFormat(LOC,{weekday:"long",day:"numeric",month:"short"}).format(parseD(d)).replace(".",""):"";
-        return `<div class="hday"><div class="hhead"><span>${esc(cap1(dateTitle(d)))}${sub?`<small>${esc(sub)}</small>`:""}</span><span class="k">${fmt(kc)} kcal</span></div><div class="list">${list.map(e=>`<button class="li" data-act="hist" data-d="${d}" data-id="${esc(e.id)}"><div><div>${esc(e.name)}</div><div class="muted" style="font-size:12px">${esc(MEAL_NAME[normMeal(e.meal)])} · ${esc(amountOf(e))}</div></div><span class="k">${fmt(e.kcal)} kcal</span></button>`).join("")}</div></div>`;
+        let body;
+        if(filt==="all")body=MEALS.map(([k,l])=>{const m=list.filter(e=>normMeal(e.meal)===k);return m.length?`<div class="hmeal">${esc(l)}</div><div class="list">${m.map(e=>row(e,d,false)).join("")}</div>`:""}).join("");
+        else body=`<div class="list">${list.map(e=>row(e,d,false)).join("")}</div>`;
+        return `<div class="hday"><div class="hhead"><span>${esc(cap1(dateTitle(d)))}${sub?`<small>${esc(sub)}</small>`:""}</span><span class="k">${fmt(kc)} kcal</span></div>${body}</div>`;
       }).join("");
-      root.querySelector("#hlist").innerHTML=html||`<p class="muted" style="font-size:13px;padding:14px 0">${days.length?tr("No encontré eso en tu historial.","Couldn't find that in your history."):tr("Aquí aparecerá todo lo que vayas registrando, día por día.","Everything you log will show up here, day by day.")}</p>`;
+      const empty=!days.length?tr("Aquí aparecerá todo lo que vayas registrando, día por día.","Everything you log will show up here, day by day.")
+        :toks.length?tr("No encontré eso en tu historial.","Couldn't find that in your history.")
+        :tr(`Todavía no hay nada registrado en ${MEAL_NAME[filt]}.`,`Nothing logged for ${MEAL_NAME[filt]} yet.`);
+      root.querySelector("#hlist").innerHTML=html||`<p class="muted" style="font-size:13px;padding:14px 0">${esc(empty)}</p>`;
     };
-    draw("");
-    root.querySelector("#hq").addEventListener("input",ev=>draw(ev.target.value));
+    root.querySelector("#hchips").addEventListener("click",ev=>{
+      const b=ev.target.closest("[data-hm]");if(!b)return;
+      filt=b.dataset.hm;S.histMeal=filt;S.addMeal=filt==="all"?baseMeal:filt;
+      root.querySelectorAll("[data-hm]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.hm===filt));draw();
+    });
+    q.addEventListener("input",draw);
+    draw();
   });
 }
 
