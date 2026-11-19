@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="23";
+const APP_VERSION="24";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -533,7 +533,9 @@ function renderYo(){
         <div class="row" style="margin-top:10px"><input id="wIn" class="input" type="number" inputmode="decimal" step="0.1" placeholder="${fmt1(wDisp(p.weight))} ${wUnit}" aria-label="${tr("Peso de hoy en","Today's weight in")} ${wUnit}"><button class="btn" style="width:auto;padding:0 18px" data-act="logW">${tr("Guardar","Save")}</button></div>
         ${sparkline(p.weights||[])}
       </section>
-      <section class="card"><div class="spread"><span class="label">${tr("Últimos 7 días","Last 7 days")}</span><span class="muted" style="font-size:12px">${tr("kcal vs. meta","kcal vs. goal")}</span></div><div id="week" class="bars" aria-label="${tr("Calorías de los últimos 7 días","Calories over the last 7 days")}"></div></section>
+      <section class="card"><div class="spread"><span class="label">${tr("Últimos 7 días","Last 7 days")}</span><span class="muted" style="font-size:12px">${tr("Toca una barra","Tap a bar")}</span></div><div class="dsel" id="weekSel"></div><div id="week" class="bars" aria-label="${tr("Calorías de los últimos 7 días","Calories over the last 7 days")}"></div></section>
+      <section class="card"><div class="spread"><span class="label" id="calTitle"></span><div class="pm"><button data-act="calnav" data-d="-1" aria-label="${tr("Mes anterior","Previous month")}">‹</button><button data-act="calnav" data-d="1" aria-label="${tr("Mes siguiente","Next month")}">›</button></div></div><div id="cal" class="cal"></div><div class="dsel" id="calSel"></div>
+        <div class="calkey"><span><i class="dot acc"></i>${tr("Hoy","Today")}</span><span><i class="dot"></i>${tr("Últimos 7 días","Last 7 days")}</span><span><i class="dot hollow"></i>${tr("Sin registro","Nothing logged")}</span></div></section>
       <section class="card stack">
         <span class="label">${tr("Ajustes","Settings")}</span>
         <div class="field"><label for="pGlass">${tr("Tamaño de tu vaso","Your glass size")}</label><select id="pGlass" class="input" data-prof="glass">${opt(IMP?[[237,"8 oz"],[355,"12 oz"],[473,tr("16 oz (botella)","16 oz (bottle)")],[591,tr("20 oz (botella)","20 oz (bottle)")]]:[[200,"200 ml"],[250,"250 ml"],[300,"300 ml"],[500,tr("500 ml (botella)","500 ml (bottle)")]],p.glass||(IMP?237:250))}</select></div>
@@ -550,16 +552,46 @@ function renderYo(){
       </section>
       <p class="foot">${tr(`Metabolismo en reposo con la fórmula Mifflin-St Jeor, multiplicado por tu actividad diaria más tus entrenamientos. Para cambiar 1 kg se estiman 7.700 kcal. Proteína según tu objetivo y tipo de entrenamiento (${fmt1(t.ppk)} g por kg), grasa mínimo 25 % de las calorías y el resto en carbohidratos. Agua 35 ml por kg, más 0,5 L los días de entreno. Son estimaciones: si en 2–3 semanas tu peso no se mueve como esperas, rehaz el test o ajusta tu ritmo.<br>Datos de productos: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="color:inherit">Open Food Facts</a>, bajo licencia ODbL. La lista de alimentos de la app usa valores de referencia; los platos preparados son promedios aproximados.`,`Resting metabolism uses the Mifflin-St Jeor formula, multiplied by your daily activity plus your workouts. Changing 1 kg is estimated at 7,700 kcal. Protein depends on your goal and training type (${fmt1(t.ppk)} g per kg), fat is at least 25% of calories and carbs make up the rest. Water: 35 ml per kg, plus 0.5 L on workout days. These are estimates: if your weight doesn't move as expected in 2–3 weeks, retake the quiz or adjust your pace.<br>Product data: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="color:inherit">Open Food Facts</a>, under the ODbL license. The app's food list uses reference values; prepared meals are approximate averages.`)}</p>
     </div>`;
-  loadWeek();
+  loadWeek();loadCal();
 }
 function localStorageKeys(){const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(P+"day-"))o[k.slice(P.length+4)]=1}}catch(e){}return o}
+function dayKcal(d){return totals(day(d).entries).kcal}
+function daySelHTML(d){
+  const t=targets(S.profile),k=dayKcal(d),goal=t?t.kcal:0;
+  return `<span><b class="num">${fmt(k)}</b>${goal?` <span class="muted">/ ${fmt(goal)} kcal</span>`:" kcal"}<small>${esc(cap1(dateTitle(d)))}</small></span><button class="dgo" data-act="goday" data-d="${d}">${tr("Ver día","Open day")} ›</button>`;
+}
 function loadWeek(){
   const t=targets(S.profile),dates=Array.from({length:7},(_,i)=>addDays(today(),i-6));
   const el=$("#week");if(!el)return;
-  const vals=dates.map(d=>totals(day(d).entries).kcal);
+  if(!S.weekSel||!dates.includes(S.weekSel))S.weekSel=today();
+  const vals=dates.map(dayKcal);
   const goal=t?t.kcal:0,mx=Math.max(goal,...vals,1)*1.08;
   el.innerHTML=(goal?`<div class="goal-line" style="bottom:calc((100% - 22px) * ${goal/mx} + 22px)"></div>`:"")+
-    dates.map((d,i)=>`<div class="b ${d===today()?"today":""}" title="${fmt(vals[i])} kcal"><i style="height:calc((100% - 22px) * ${vals[i]/mx})"></i><span>${new Intl.DateTimeFormat(LOC,{weekday:"narrow"}).format(parseD(d))}</span></div>`).join("");
+    dates.map((d,i)=>`<button class="b ${d===today()?"today":""} ${d===S.weekSel?"sel":""}" data-act="wk" data-d="${d}" aria-label="${esc(dateTitle(d))}: ${fmt(vals[i])} kcal"><i style="height:calc((100% - 22px) * ${vals[i]/mx})"></i><span>${new Intl.DateTimeFormat(LOC,{weekday:"narrow"}).format(parseD(d))}</span></button>`).join("");
+  el.classList.toggle("picked",S.weekSel!==today());
+  $("#weekSel").innerHTML=daySelHTML(S.weekSel);
+}
+function loadCal(){
+  const el=$("#cal");if(!el)return;
+  const t=today(),ym=S.calMonth||t.slice(0,7);
+  const [Y,M]=ym.split("-").map(Number);
+  const first=new Date(Y,M-1,1),nDays=new Date(Y,M,0).getDate();
+  const sunFirst=CC==="us";
+  const lead=(first.getDay()+(sunFirst?0:6))%7;
+  const week=new Set(Array.from({length:7},(_,i)=>addDays(t,i-6)));
+  const logged=localStorageKeys();
+  $("#calTitle").textContent=cap1(new Intl.DateTimeFormat(LOC,{month:"long",year:"numeric"}).format(first));
+  const heads=Array.from({length:7},(_,i)=>new Intl.DateTimeFormat(LOC,{weekday:"narrow"}).format(new Date(2024,0,(sunFirst?7:1)+i)));
+  let cells=heads.map(h=>`<span class="ch">${h}</span>`).join("")+"<span></span>".repeat(lead);
+  for(let n=1;n<=nDays;n++){
+    const d=`${Y}-${String(M).padStart(2,"0")}-${String(n).padStart(2,"0")}`;
+    const fut=d>t,has=!!logged[d]&&day(d).entries.length>0;
+    const cls=["cd",d===t?"today":"",week.has(d)?"wk":"",week.has(d)&&!has?"none":"",fut?"fut":"",d===S.calSel?"sel":""].filter(Boolean).join(" ");
+    cells+=fut?`<span class="${cls}"><b>${n}</b></span>`:`<button class="${cls}" data-act="calday" data-d="${d}"><b>${n}</b><i></i></button>`;
+  }
+  el.innerHTML=cells;
+  const nx=document.querySelector('[data-act=calnav][data-d="1"]');if(nx)nx.disabled=ym>=t.slice(0,7);
+  $("#calSel").innerHTML=S.calSel&&S.calSel.slice(0,7)===ym?daySelHTML(S.calSel):"";
 }
 
 /* ---------- hoja inferior ---------- */
@@ -1347,6 +1379,10 @@ document.addEventListener("click",e=>{
   if(a==="close"){closeSheet();return}
   if(a==="tab"){S.tab=el.dataset.tab;render();window.scrollTo(0,0);return}
   if(a==="add"){openAdd(el.dataset.meal);return}
+  if(a==="wk"){S.weekSel=el.dataset.d;loadWeek();return}
+  if(a==="calday"){S.calSel=S.calSel===el.dataset.d?null:el.dataset.d;loadCal();return}
+  if(a==="calnav"){const ym=S.calMonth||today().slice(0,7);const [y,m]=ym.split("-").map(Number);const dt=new Date(y,m-1+Number(el.dataset.d),1);const n=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;if(n>today().slice(0,7))return;S.calMonth=n;loadCal();return}
+  if(a==="goday"){S.date=el.dataset.d;S.tab="hoy";render();window.scrollTo(0,0);return}
   if(a==="day"){const n=addDays(S.date,Number(el.dataset.d));if(n>today())return;S.date=n;render();return}
   if(a==="gotoday"){S.date=today();render();return}
   if(a==="entry"){openEntry(el.dataset.id);return}

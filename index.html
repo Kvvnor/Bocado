@@ -200,10 +200,34 @@ textarea.input{height:110px;padding:10px 12px;resize:vertical}
 .seg button{border:0;background:none;border-radius:9px;font-weight:600;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:120px;position:relative;margin-top:10px}
-.bars .b{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bars .b{background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
 .bars .b i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--ink);min-height:3px}
 .bars .b.today i{background:var(--accent)}
 .bars .b span{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase}
+.bars .b.sel span{color:var(--ink);font-weight:700}
+.bars.picked .b:not(.sel) i{opacity:.4}
+.dsel{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;margin-top:8px}
+.dsel:empty{display:none}
+.dsel .num{font-family:var(--display);font-variation-settings:"wdth" 70;font-weight:800;font-size:26px}
+.dsel small{display:block;font-size:12px;color:var(--muted)}
+.dgo{border:1px solid var(--line);background:var(--soft);border-radius:10px;height:30px;padding:0 10px;font-size:13px;white-space:nowrap}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px 0;margin-top:10px;text-align:center}
+.cal .ch{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;padding-bottom:4px}
+.cal .cd{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:40px;background:none;border:0;border-radius:10px;padding:0;color:var(--ink);font-size:13px}
+.cal .cd b{font-weight:500;font-variant-numeric:tabular-nums}
+.cal .cd i{width:5px;height:5px;border-radius:50%;background:transparent}
+.cal .cd.wk i{background:var(--ink)}
+.cal .cd.wk.none i{background:transparent;box-shadow:inset 0 0 0 1.2px var(--muted)}
+.cal .cd.today b{color:var(--accent);font-weight:800}
+.cal .cd.today i{background:var(--accent);box-shadow:none}
+.cal .cd.fut{color:var(--muted);opacity:.5}
+.cal .cd.sel{background:var(--soft);box-shadow:inset 0 0 0 1px var(--line)}
+.calkey{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.calkey span{display:inline-flex;align-items:center;gap:5px}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.dot.acc{background:var(--accent)}
+.dot.hollow{background:transparent;box-shadow:inset 0 0 0 1.2px var(--muted)}
+.pm button:disabled{opacity:.35}
 .goal-line{position:absolute;left:0;right:0;border-top:1.5px dashed var(--muted);opacity:.6}
 .foot{font-size:12px;color:var(--muted);line-height:1.5;margin:4px 2px 0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
