@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="21";
+const APP_VERSION="22";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -580,7 +580,7 @@ function findFood(key){return S.foods[key]||tempFoods[key]||BASE.find(b=>b.key==
 
 function openAdd(meal){
   S.addMeal=meal||S.addMeal||mealNow();
-  const rec=recentFoods(6).map(f=>{const u=unitFor(f);return foodRow(f,f.lastMode==="u"&&u&&f.lastUnits?fmtN(f.lastUnits)+" "+uName(u,f.lastUnits):f.lastG?fmt(f.lastG)+(f.ml?" ml":" g"):"")}).join("");
+  const rec=recentFoods(4).map(f=>{const u=unitFor(f);return foodRow(f,f.lastMode==="u"&&u&&f.lastUnits?fmtN(f.lastUnits)+" "+uName(u,f.lastUnits):f.lastG?fmt(f.lastG)+(f.ml?" ml":" g"):"")}).join("");
   openSheet(`
     <h2>${tr("Añadir comida","Add food")}</h2>
     <div style="margin-top:10px">${mealChips(S.addMeal)}</div>
@@ -593,7 +593,7 @@ function openAdd(meal){
       <button class="opt" data-act="manual">${IC.pencil}${tr("Ingresar a mano","Enter manually")}<small>${tr("Nombre, gramos y macros","Name, grams and macros")}</small></button>
       <button class="opt wide" data-act="typecode">${IC.keys}<span>${tr("Escribir número del código","Type the barcode number")}</span></button>
     </div>
-    ${rec?`<div style="margin-top:18px"><span class="label">${tr("Recientes","Recent")}</span><div class="list">${rec}</div></div>`:""}
+    ${rec||historyDays().length?`<div style="margin-top:18px"><span class="label">${tr("Historial","History")}</span><div class="list">${rec}<button class="li hmore" data-act="history"><span>${tr("Ver todo lo que has comido, por día","See everything you've eaten, by day")}</span><span class="k">${IC.right}</span></button></div></div>`:""}
     ${aiProvider()?"":`<button class="linkbtn" data-act="aisetup">${tr("¿Quieres registrar con una foto del plato o describiendo lo que comiste? Conecta una IA (opcional)","Want to log with a meal photo or by describing what you ate? Connect an AI (optional)")}</button>`}`,
   root=>wireMealChips(root,()=>S.addMeal,v=>S.addMeal=v));
 }
@@ -617,11 +617,12 @@ function openPortion(food,entry,opts){
   const unit=unitFor(food);
   const saved=S.foods[food.key]||{};
   const gU=food.ml?"ml":"g";
-  let unitG=entry&&entry.unitG?num(entry.unitG):unit.g;
-  let mode=entry?(entry.units?"u":"g"):(saved.lastMode||(unit.generic?"g":"u"));
+  const pre=entry||opts.prefill;
+  let unitG=pre&&pre.unitG?num(pre.unitG):unit.g;
+  let mode=pre?(pre.units?"u":"g"):(saved.lastMode||(unit.generic?"g":"u"));
   if(mode==="u"&&!unitG)mode="g";
-  let n=entry&&entry.units?num(entry.units):(saved.lastUnits||1);
-  let g=entry?num(entry.grams):(mode==="u"?n*unitG:(food.lastG||food.servingG||100));
+  let n=pre&&pre.units?num(pre.units):(saved.lastUnits||1);
+  let g=pre?num(pre.grams):(mode==="u"?n*unitG:(food.lastG||food.servingG||100));
   let meal=entry?normMeal(entry.meal):(S.addMeal||mealNow());
   const per=food.per100;
   const warn=!entry&&suspicious(per);
@@ -692,11 +693,49 @@ function openPortion(food,entry,opts){
     if(del)del.addEventListener("click",()=>{const d=day();d.entries=d.entries.filter(z=>z.id!==entry.id);saveDay();closeSheet();render();toast(tr("Eliminado","Removed"))});
   });
 }
-function openEntry(id){
-  const e=day().entries.find(x=>x.id===id);if(!e)return;
+function foodFromEntry(e){
   const known=e.key&&findFood(e.key);
   const per=e.per100||per100Of(e,num(e.grams)||100);
-  openPortion({key:e.key||("n-"+slug(e.name)),name:e.name,per100:per,servingG:known&&known.servingG,brand:known&&known.brand,barcode:known&&known.barcode,src:e.src,ml:e.ml||(known&&known.ml),approx:known&&known.approx,cat:known&&known.cat},e);
+  return {key:e.key||("n-"+slug(e.name)),name:e.name,per100:per,servingG:known&&known.servingG,brand:known&&known.brand,barcode:known&&known.barcode,src:e.src,ml:e.ml||(known&&known.ml),approx:known&&known.approx,cat:known&&known.cat,unit:known&&known.unit};
+}
+function openEntry(id){
+  const e=day().entries.find(x=>x.id===id);if(!e)return;
+  openPortion(foodFromEntry(e),e);
+}
+/* ---------- historial: todo lo registrado, agrupado por día ---------- */
+function historyDays(){
+  const out=[],seen=new Set();
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(P+"day-"))seen.add(k.slice((P+"day-").length))}
+  Object.keys(S.days).forEach(d=>seen.add(d));
+  [...seen].filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&d<=today()).sort().reverse().slice(0,120).forEach(d=>{
+    const es=day(d).entries.filter(e=>e&&e.name&&(e.per100||num(e.grams)>0));
+    if(es.length)out.push({d,es:[...es].sort((a,b)=>MEALS.findIndex(m=>m[0]===normMeal(a.meal))-MEALS.findIndex(m=>m[0]===normMeal(b.meal)))});
+  });
+  return out;
+}
+const amountOf=e=>e.units?`${fmtN(e.units)} ${Math.abs(e.units-1)<1e-9?e.uS:e.uP}`:`${fmt(e.grams)} ${e.ml?"ml":"g"}`;
+function openHistory(){
+  const days=historyDays();
+  openSheet(`<h2>${tr("Historial","History")}</h2>
+    <p class="muted" style="font-size:13px;margin-top:4px">${tr("Toca un alimento para volver a añadirlo con la misma cantidad.","Tap a food to add it again with the same amount.")}</p>
+    <div style="margin-top:10px">${mealChips(S.addMeal)}</div>
+    <input id="hq" class="input" style="margin-top:10px" type="search" placeholder="${tr("Buscar en lo que has comido","Search what you've eaten")}" aria-label="${tr("Buscar en el historial","Search history")}">
+    <div id="hlist" style="margin-top:4px"></div>`,root=>{
+    wireMealChips(root,()=>S.addMeal,v=>S.addMeal=v);
+    const draw=q=>{
+      const toks=String(q||"").trim()?slug(q).split("-").filter(Boolean):[];
+      const html=days.map(({d,es})=>{
+        const list=toks.length?es.filter(e=>{const n=slug(e.name);return toks.every(t=>n.includes(t))}):es;
+        if(!list.length)return "";
+        const kc=es.reduce((a,e)=>a+num(e.kcal),0);
+        const sub=d===today()||d===addDays(today(),-1)?new Intl.DateTimeFormat(LOC,{weekday:"long",day:"numeric",month:"short"}).format(parseD(d)).replace(".",""):"";
+        return `<div class="hday"><div class="hhead"><span>${esc(cap1(dateTitle(d)))}${sub?`<small>${esc(sub)}</small>`:""}</span><span class="k">${fmt(kc)} kcal</span></div><div class="list">${list.map(e=>`<button class="li" data-act="hist" data-d="${d}" data-id="${esc(e.id)}"><div><div>${esc(e.name)}</div><div class="muted" style="font-size:12px">${esc(MEAL_NAME[normMeal(e.meal)])} · ${esc(amountOf(e))}</div></div><span class="k">${fmt(e.kcal)} kcal</span></button>`).join("")}</div></div>`;
+      }).join("");
+      root.querySelector("#hlist").innerHTML=html||`<p class="muted" style="font-size:13px;padding:14px 0">${days.length?tr("No encontré eso en tu historial.","Couldn't find that in your history."):tr("Aquí aparecerá todo lo que vayas registrando, día por día.","Everything you log will show up here, day by day.")}</p>`;
+    };
+    draw("");
+    root.querySelector("#hq").addEventListener("input",ev=>draw(ev.target.value));
+  });
 }
 
 function openFoods(){
@@ -1307,6 +1346,8 @@ document.addEventListener("click",e=>{
   if(a==="scanType"){stopScanner();openTypeCode(false);return}
   if(a==="search"){openSearch();return}
   if(a==="myfoods"){openFoods();return}
+  if(a==="history"){openHistory();return}
+  if(a==="hist"){const e=day(el.dataset.d).entries.find(x=>x.id===el.dataset.id);if(e)openPortion(foodFromEntry(e),null,{prefill:e});return}
   if(a==="manual"){openManual();return}
   if(a==="typecode"){openTypeCode(false);return}
   if(a==="export"){doExport();return}
