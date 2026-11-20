@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="26";
+const APP_VERSION="27";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -595,14 +595,58 @@ function loadCal(){
 }
 
 /* ---------- hoja inferior ---------- */
-function openSheet(html,mount){
+/* hojas con historial: deslizar hacia abajo vuelve a la hoja anterior (o cierra) */
+const SH={stack:[],cur:null};
+function renderSheet(html,mount){
   const prev=$("#sheetBody"),body=prev.cloneNode(false);prev.replaceWith(body);
   body.innerHTML=html;$("#sheet").hidden=false;$("#scrim").hidden=false;
   document.body.style.overflow="hidden";$("#sheet").scrollTop=0;
   if(mount) mount(body);
 }
-function closeSheet(){$("#sheet").hidden=true;$("#scrim").hidden=true;document.body.style.overflow=""}
-function loading(msg){openSheet(`<div class="stack" style="align-items:center;padding:28px 0 12px;text-align:center"><div class="spin" aria-hidden="true"></div><p>${esc(msg)}</p></div>`)}
+function openSheet(html,mount,opt){
+  opt=opt||{};
+  if($("#sheet").hidden)SH.stack=[];
+  else if(SH.cur&&!SH.cur.transient)SH.stack.push(SH.cur);
+  SH.cur={html,mount,transient:!!opt.transient,onLeave:opt.onLeave};
+  renderSheet(html,mount);
+}
+function leaveCur(){const c=SH.cur;if(c&&c.onLeave){try{c.onLeave()}catch(e){}}}
+function closeSheet(){SH.stack=[];SH.cur=null;$("#sheet").hidden=true;$("#scrim").hidden=true;document.body.style.overflow="";const sh=$("#sheet");sh.style.transform="";sh.style.transition=""}
+function sheetBack(){
+  leaveCur();
+  const p=SH.stack.pop();
+  if(!p){closeSheet();return}
+  SH.cur=p;renderSheet(p.html,p.mount);
+}
+(function swipeSheet(){
+  const sh=document.getElementById("sheet");if(!sh)return;
+  let y0=0,x0=0,dy=0,t0=0,on=false,locked=null;
+  sh.addEventListener("touchstart",e=>{
+    if(e.touches.length!==1)return;
+    const t=e.touches[0];y0=t.clientY;x0=t.clientX;dy=0;t0=Date.now();locked=null;
+    on=sh.scrollTop<=0;
+  },{passive:true});
+  sh.addEventListener("touchmove",e=>{
+    if(!on)return;
+    const t=e.touches[0],ddy=t.clientY-y0,ddx=t.clientX-x0;
+    if(locked===null){if(Math.abs(ddy)<6&&Math.abs(ddx)<6)return;locked=ddy>0&&Math.abs(ddy)>Math.abs(ddx)*1.2;if(!locked){on=false;return}
+      const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))a.blur()}
+    dy=Math.max(0,ddy);
+    if(e.cancelable)e.preventDefault();
+    sh.style.transition="none";sh.style.transform=`translateY(${dy}px)`;
+  },{passive:false});
+  const end=()=>{
+    if(!on||!locked){on=false;return}
+    on=false;
+    const v=dy/Math.max(1,Date.now()-t0);
+    if(dy>110||(dy>40&&v>0.6)){
+      sh.style.transition="transform .2s ease-in";sh.style.transform="translateY(100%)";
+      setTimeout(()=>{sh.style.transition="none";sh.style.transform="";sheetBack();},190);
+    }else{sh.style.transition="transform .2s cubic-bezier(.2,.8,.2,1)";sh.style.transform="";}
+  };
+  sh.addEventListener("touchend",end);sh.addEventListener("touchcancel",end);
+})();
+function loading(msg){openSheet(`<div class="stack" style="align-items:center;padding:28px 0 12px;text-align:center"><div class="spin" aria-hidden="true"></div><p>${esc(msg)}</p></div>`,null,{transient:true})}
 function mealChips(sel){return `<div class="chips">${MEALS.map(([k,l])=>`<button class="chip" data-meal-chip="${k}" aria-pressed="${k===sel}">${l}</button>`).join("")}</div>`}
 function wireMealChips(root,get,set){root.querySelectorAll("[data-meal-chip]").forEach(b=>b.addEventListener("click",()=>{set(b.dataset.mealChip);root.querySelectorAll("[data-meal-chip]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.mealChip===get()))}))}
 function recentFoods(n){return Object.values(S.foods).filter(f=>f.per100).sort((a,b)=>(b.last||0)-(a.last||0)).slice(0,n)}
@@ -1213,10 +1257,10 @@ function aiMsg(e){
   return (tr("No funcionó","That didn't work")+(e&&e.msg?": "+e.msg:(e&&e.status?` (HTTP ${e.status})`:"")+(e&&e.code?` [${e.code}]`:"")+(e&&e.msg||e&&e.status?"":tr(". Intenta de nuevo.",". Try again."))));
 }
 function aiFail(e,extra){
-  const m=aiMsg(e);if(m===null){closeSheet();return}
+  const m=aiMsg(e);if(m===null)return;
   openSheet(`<h2>${tr("No funcionó","That didn't work")}</h2><p class="muted">${esc(m)}</p><div class="stack" style="margin-top:14px">${e&&(e.code==="nokey"||e.code==="badkey")?`<button class="btn" data-act="aisetup">${tr("Configurar la llave","Set up the key")}</button>`:""}${extra||""}</div>`);
 }
-function aiLoading(msg){openSheet(`<div class="stack" style="align-items:center;padding:28px 0 12px;text-align:center"><div class="spin" aria-hidden="true"></div><p>${esc(msg)}</p><button class="btn ghost" data-act="aicancel" style="max-width:200px">${tr("Cancelar","Cancel")}</button></div>`)}
+function aiLoading(msg){openSheet(`<div class="stack" style="align-items:center;padding:28px 0 12px;text-align:center"><div class="spin" aria-hidden="true"></div><p>${esc(msg)}</p><button class="btn ghost" data-act="aicancel" style="max-width:200px">${tr("Cancelar","Cancel")}</button></div>`,null,{transient:true,onLeave:()=>{AI.userCancel=true;if(AI.abort)AI.abort.abort()}})}
 
 const ITEMS_FORMAT=EN?`Reply ONLY with valid JSON, no text before or after, in exactly this shape:
 {"items":[{"name":"Cooked white rice","grams":150,"kcal":195,"p":4.1,"c":42,"f":0.4}],"note":"one short sentence in English"}
@@ -1391,7 +1435,7 @@ function logWeight(v){
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-act]");if(!el)return;
   const a=el.dataset.act;
-  if(a==="close"){closeSheet();return}
+  if(a==="close"){leaveCur();closeSheet();return}
   if(a==="tab"){S.tab=el.dataset.tab;render();window.scrollTo(0,0);return}
   if(a==="add"){openAdd(el.dataset.meal);return}
   if(a==="wk"){S.weekSel=el.dataset.d;loadWeek();return}
