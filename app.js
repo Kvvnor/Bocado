@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="28";
+const APP_VERSION="29";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -437,7 +437,7 @@ function renderHoy(){
     const es=d.entries.filter(e=>normMeal(e.meal)===k);
     const kc=es.reduce((a,e)=>a+num(e.kcal),0);
     const rows=es.map(e=>`<button class="entry" data-act="entry" data-id="${esc(e.id)}"><div><div class="nm">${esc(e.name)}</div><div class="sub">${[e.units?fmtN(e.units)+" "+(Math.abs(e.units-1)<1e-9?e.uS:e.uP):"",`${fmt(e.grams)} ${e.ml?"ml":"g"}`,`P ${fmt(e.p)}`,`C ${fmt(e.c)}`,`${tr("G","F")} ${fmt(e.f)}`].filter(Boolean).map(x=>esc(x).replace(/ /g,"\u00a0")).join(" · ")}</div></div><span class="kc">${fmt(e.kcal)}</span></button>`).join("");
-    return `<div class="meal${es.length?"":" none"}"><div class="mealhead"><h3>${l}${kc?`<span class="k">${fmt(kc)} kcal</span>`:""}</h3><button class="addmini" data-act="add" data-meal="${k}" aria-label="${tr("Añadir a","Add to")} ${l}">${IC.plus}${tr("Añadir","Add")}</button></div>${rows?`<div class="mrows">${rows}</div>`:""}</div>`;
+    return `<div class="meal${es.length?"":" none"}"><div class="mealhead"><h3>${l}${kc?`<span class="k">${fmt(kc)} kcal</span>`:""}</h3><div class="mbtns"><button class="addmini icon" data-act="mhist" data-meal="${k}" aria-label="${tr("Buscar en lo que has comido en","Search what you've eaten for")} ${l}">${IC.search}</button><button class="addmini" data-act="add" data-meal="${k}" aria-label="${tr("Añadir a","Add to")} ${l}">${IC.plus}${tr("Añadir","Add")}</button></div></div>${rows?`<div class="mrows">${rows}</div>`:""}</div>`;
   }).join("");
   $("#viewHoy").innerHTML=`
     <header class="top">
@@ -790,7 +790,8 @@ function historyDays(){
   return out;
 }
 const amountOf=e=>e.units?`${fmtN(e.units)} ${Math.abs(e.units-1)<1e-9?e.uS:e.uP}`:`${fmt(e.grams)} ${e.ml?"ml":"g"}`;
-function openHistory(){
+function openHistory(o){
+  o=o||{};
   const days=historyDays();
   let filt=S.histMeal||"all";
   const baseMeal=S.addMeal||mealNow();
@@ -827,6 +828,7 @@ function openHistory(){
     });
     q.addEventListener("input",draw);
     draw();
+    if(o.focus)setTimeout(()=>{try{q.focus({preventScroll:true})}catch(e){}},60);
   });
 }
 
@@ -1487,6 +1489,7 @@ document.addEventListener("click",e=>{
   if(a==="search"){openSearch();return}
   if(a==="myfoods"){openFoods();return}
   if(a==="history"){openHistory();return}
+  if(a==="mhist"){S.addMeal=el.dataset.meal;S.histMeal=el.dataset.meal;openHistory({focus:true});return}
   if(a==="hist"){const e=day(el.dataset.d).entries.find(x=>x.id===el.dataset.id);if(e)openPortion(foodFromEntry(e),null,{prefill:e});return}
   if(a==="manual"){openManual();return}
   if(a==="typecode"){openTypeCode(false);return}
