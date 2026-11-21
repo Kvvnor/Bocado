@@ -39,7 +39,7 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="27";
+const APP_VERSION="28";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
 const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
@@ -1277,7 +1277,7 @@ async function runPlate(file){
     const blob=await toJpeg(file,1024);
     const v=await aiJSON(tr("Eres nutricionista. Identifica cada alimento o preparación visible en la foto y estima su peso y su aporte nutricional. Si no hay comida en la imagen, devuelve items vacío y explícalo en note.\n","You are a nutritionist. Identify each food or dish visible in the photo and estimate its weight and nutrition. If there is no food in the image, return empty items and explain in note.\n")+ITEMS_FORMAT,blob);
     if($("#sheet").hidden)return;
-    showAiItems(cleanItems(v),v&&v.note);
+    showAiItems(cleanItems(v),v&&v.note,{blob});
   }catch(e){if(!$("#sheet").hidden||e.code!=="abort")aiFail(e)}
 }
 function openDescribe(){
@@ -1287,25 +1287,54 @@ function openDescribe(){
     root.querySelector("#dOk").addEventListener("click",async()=>{
       const txt=root.querySelector("#dT").value.trim();if(!txt){toast(tr("Escribe lo que comiste","Write what you ate"));return}
       aiLoading(tr("Analizando tu comida…","Analyzing your food…"));
-      try{const v=await aiJSON(tr("Eres nutricionista. Estima cada alimento de esta comida descrita por el usuario, con su peso en gramos y su aporte nutricional.\nComida: ","You are a nutritionist. Estimate each food in this meal described by the user, with its weight in grams and its nutrition.\nMeal: ")+"\"\"\""+txt.slice(0,600)+"\"\"\"\n"+ITEMS_FORMAT);if(!$("#sheet").hidden)showAiItems(cleanItems(v),v&&v.note)}
+      try{const v=await aiJSON(tr("Eres nutricionista. Estima cada alimento de esta comida descrita por el usuario, con su peso en gramos y su aporte nutricional.\nComida: ","You are a nutritionist. Estimate each food in this meal described by the user, with its weight in grams and its nutrition.\nMeal: ")+"\"\"\""+txt.slice(0,600)+"\"\"\"\n"+ITEMS_FORMAT);if(!$("#sheet").hidden)showAiItems(cleanItems(v),v&&v.note,{text:txt.slice(0,600)})}
       catch(e){aiFail(e)}
     });
   });
 }
-function showAiItems(items,note){
+function showAiItems(items,note,ctx){
+  ctx=ctx||{};const fixed=new Set(ctx.fixed||[]);
   if(!items.length){openSheet(`<h2>${tr("No encontré comida","No food found")}</h2><p class="muted">${esc(note||tr("Intenta con otra foto o descríbelo con palabras.","Try another photo or describe it in words."))}</p>`);return}
   let meal=S.addMeal||mealNow();
   const base=items.map(i=>({...i,per:per100Of(i,i.grams)}));
   openSheet(`<h2>${tr("Revisa la estimación","Review the estimate")}</h2>
     ${note?`<p class="note" style="margin-top:8px">${esc(note)}</p>`:""}
-    <div style="margin-top:6px">${base.map((i,ix)=>`<div class="aiitem"><input type="checkbox" checked data-ix="${ix}" aria-label="${tr("Incluir","Include")} ${esc(i.name)}"><div><div style="font-weight:500">${esc(i.name)}</div><div class="muted" style="font-size:12px;font-family:var(--mono)" id="ai${ix}"></div></div><div class="aig"><input class="input" type="number" inputmode="decimal" step="any" value="${Math.round(i.grams)}" data-g="${ix}" aria-label="${tr("Gramos de","Grams of")} ${esc(i.name)}"><span>g</span></div></div>`).join("")}</div>
+    <div style="margin-top:6px">${base.map((i,ix)=>`<div class="aiitem"><input type="checkbox" checked data-ix="${ix}" aria-label="${tr("Incluir","Include")} ${esc(i.name)}"><div><div style="font-weight:500">${esc(i.name)}${fixed.has(i.name)?` <span class="fixtag">${tr("corregido","corrected")}</span>`:""}</div><div class="muted" style="font-size:12px;font-family:var(--mono)" id="ai${ix}"></div></div><div class="aig"><input class="input" type="number" inputmode="decimal" step="any" value="${Math.round(i.grams)}" data-g="${ix}" aria-label="${tr("Gramos de","Grams of")} ${esc(i.name)}"><span>g</span></div></div>`).join("")}</div>
     <div class="spread" style="margin:12px 0"><span class="label">Total</span><span class="num" style="font-size:30px" id="aiTot"></span></div>
+    <div class="fixbox"><label for="aiFix">${tr("¿Algo no está bien?","Something wrong?")}</label><div class="fixrow"><input id="aiFix" class="input" type="text" enterkeyhint="send" autocomplete="off" placeholder="${tr("Ej. no es pollo, es cerdo","e.g. it's pork, not chicken")}"><button class="btn ghost" id="aiFixGo">${tr("Corregir","Fix")}</button></div></div>
     <div class="stack">${mealChips(meal)}<button class="btn" id="aiOk">${tr("Añadir","Add")}</button></div>
     <p class="foot" style="margin-top:10px">${tr("Es una estimación: ajusta los gramos si conoces la cantidad real.","It's an estimate: adjust the grams if you know the real amount.")}</p>`,root=>{
     const cur=()=>base.map((b,ix)=>{const g=num(root.querySelector(`[data-g="${ix}"]`).value);return{name:b.name,grams:g,...fromPer100(b.per,g),on:root.querySelector(`[data-ix="${ix}"]`).checked}});
     const upd=()=>{const c=cur();c.forEach((x,ix)=>root.querySelector("#ai"+ix).textContent=`${fmt(x.kcal)} kcal · P ${fmt(x.p)} · C ${fmt(x.c)} · ${tr("G","F")} ${fmt(x.f)}`);root.querySelector("#aiTot").textContent=fmt(c.filter(x=>x.on).reduce((a,x)=>a+x.kcal,0))+" kcal"};
     root.addEventListener("input",upd);root.addEventListener("change",upd);upd();
     wireMealChips(root,()=>meal,v=>meal=v);
+    const fixIn=root.querySelector("#aiFix");
+    const doFix=async()=>{
+      const fix=fixIn.value.trim();if(!fix){toast(tr("Escribe qué hay que corregir","Write what needs fixing"));fixIn.focus();return}
+      fixIn.blur();S.addMeal=meal;
+      const prevItems=cur().map(({on,...x})=>({name:x.name,grams:r1(x.grams),kcal:Math.round(x.kcal),p:r1(x.p),c:r1(x.c),f:r1(x.f)}));
+      aiLoading(tr("Corrigiendo…","Fixing…"));
+      try{
+        const v=await aiJSON(tr(
+`Eres nutricionista. Ya estimaste esta comida${ctx.blob?" a partir de la foto adjunta":ctx.text?` descrita así: """${ctx.text}"""`:""}. Tu estimación anterior fue:
+${JSON.stringify({items:prevItems})}
+El usuario la corrige: """${fix.slice(0,300)}"""
+Aplica SOLO esa corrección. Cambia el o los alimentos que indica (nombre y valores nutricionales recalculados para el mismo peso, salvo que el usuario diga otra cantidad), agrega o quita lo que pida, y deja todos los demás alimentos exactamente iguales. Devuelve la lista completa.
+`,
+`You are a nutritionist. You already estimated this meal${ctx.blob?" from the attached photo":ctx.text?` described as: """${ctx.text}"""`:""}. Your previous estimate was:
+${JSON.stringify({items:prevItems})}
+The user corrects it: """${fix.slice(0,300)}"""
+Apply ONLY that correction. Change the food(s) it refers to (name and nutrition recalculated for the same weight, unless the user gives another amount), add or remove what they ask, and keep every other food exactly the same. Return the full list.
+`)+ITEMS_FORMAT,ctx.blob||null);
+        if($("#sheet").hidden)return;
+        const nv=cleanItems(v);
+        if(!nv.length){toast(tr("No pude aplicar la corrección. Intenta decirlo de otra forma.","Couldn't apply the fix. Try saying it another way."));sheetBack();return}
+        const oldNames=new Set(prevItems.map(x=>x.name.toLowerCase()));
+        showAiItems(nv,v&&v.note,{...ctx,fixed:nv.filter(x=>!oldNames.has(x.name.toLowerCase())).map(x=>x.name)});
+      }catch(e){if(!$("#sheet").hidden||e.code!=="abort")aiFail(e)}
+    };
+    root.querySelector("#aiFixGo").addEventListener("click",doFix);
+    fixIn.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doFix()}});
     root.querySelector("#aiOk").addEventListener("click",()=>{
       const sel=cur().filter(x=>x.on&&x.grams>0);if(!sel.length){toast(tr("Marca al menos un alimento","Select at least one food"));return}
       const d=day();
