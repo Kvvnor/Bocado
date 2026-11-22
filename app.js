@@ -39,9 +39,9 @@ const MEAL_NAME=Object.fromEntries(MEALS);
 const ACT=[[1.2,"Sedentario"],[1.375,"Ligero (1–3 entrenos)"],[1.55,"Moderado (3–5 entrenos)"],[1.725,"Alto (6–7 entrenos)"]];
 const GOALS=[[-400,"Bajar de peso (−400 kcal)"],[0,"Mantener"],[300,"Subir de peso (+300 kcal)"],[500,"Subir rápido (+500 kcal)"]];
 const DEF_PROFILE={name:"",sex:null,age:null,height:null,weight:null,glass:null,weights:[],onboarded:false};
-const APP_VERSION="29";
+const APP_VERSION="0.3.0";
 const OFF_FIELDS="code,product_name,product_name_es,product_name_en,generic_name,generic_name_es,generic_name_en,brands,serving_quantity,nutriments";
-const S={profile:{...DEF_PROFILE},foods:{},days:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
+const S={profile:{...DEF_PROFILE},foods:{},days:{},wlog:{},date:dstr(new Date()),tab:"hoy",addMeal:null,pendingCode:null};
 
 const UNITS={"Manzana": ["manzana", "manzanas", "apple", "apples", 150], "Plátano": ["plátano", "plátanos", "banana", "bananas", 120], "Naranja": ["naranja", "naranjas", "orange", "oranges", 150], "Mandarina": ["mandarina", "mandarinas", "tangerine", "tangerines", 80], "Pera": ["pera", "peras", "pear", "pears", 170], "Durazno": ["durazno", "duraznos", "peach", "peaches", 150], "Damasco": ["damasco", "damascos", "apricot", "apricots", 35], "Ciruela": ["ciruela", "ciruelas", "plum", "plums", 65], "Kiwi": ["kiwi", "kiwis", "kiwi", "kiwis", 75], "Limón": ["limón", "limones", "lemon", "lemons", 60], "Higo": ["higo", "higos", "fig", "figs", 50], "Dátiles": ["dátil", "dátiles", "date", "dates", 24], "Palta": ["palta", "paltas", "avocado", "avocados", 140], "Chirimoya": ["chirimoya", "chirimoyas", "cherimoya", "cherimoyas", 300], "Tomate": ["tomate", "tomates", "tomato", "tomatoes", 120], "Zanahoria": ["zanahoria", "zanahorias", "carrot", "carrots", 80], "Cebolla": ["cebolla", "cebollas", "onion", "onions", 100], "Ajo": ["diente", "dientes", "clove", "cloves", 5], "Pimentón rojo": ["pimentón", "pimentones", "bell pepper", "bell peppers", 150], "Choclo cocido": ["choclo", "choclos", "ear of corn", "ears of corn", 150], "Marraqueta": ["marraqueta", "marraquetas", "roll", "rolls", 100], "Hallulla": ["hallulla", "hallullas", "flatbread", "flatbreads", 80], "Pan amasado": ["pan", "panes", "bread roll", "bread rolls", 100], "Pan de molde blanco": ["rebanada", "rebanadas", "slice", "slices", 27], "Pan de molde integral": ["rebanada", "rebanadas", "slice", "slices", 30], "Pan pita": ["pan pita", "panes pita", "pita", "pitas", 60], "Pan de hamburguesa": ["pan", "panes", "bun", "buns", 50], "Tortilla de trigo": ["tortilla", "tortillas", "tortilla", "tortillas", 40], "Tortilla de maíz": ["tortilla", "tortillas", "tortilla", "tortillas", 26], "Galletas de agua": ["galleta", "galletas", "cracker", "crackers", 4], "Papa cocida": ["papa", "papas", "potato", "potatoes", 150], "Camote cocido": ["camote", "camotes", "sweet potato", "sweet potatoes", 150], "Avena en hojuelas": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 10], "Vienesa": ["vienesa", "vienesas", "hot dog", "hot dogs", 45], "Jamón de pavo": ["lámina", "láminas", "slice", "slices", 15], "Jamón de cerdo": ["lámina", "láminas", "slice", "slices", 15], "Tocino cocido": ["tira", "tiras", "strip", "strips", 8], "Salame": ["lámina", "láminas", "slice", "slices", 5], "Mortadela": ["lámina", "láminas", "slice", "slices", 15], "Trutro de pollo asado con piel": ["trutro", "trutros", "thigh", "thighs", 120], "Chuleta de cerdo cocida": ["chuleta", "chuletas", "chop", "chops", 150], "Longaniza cocida": ["longaniza", "longanizas", "sausage", "sausages", 80], "Atún en agua (escurrido)": ["lata", "latas", "can", "cans", 120], "Atún en aceite (escurrido)": ["lata", "latas", "can", "cans", 120], "Sardinas en aceite (escurridas)": ["lata", "latas", "can", "cans", 90], "Camarones cocidos": ["camarón", "camarones", "shrimp", "shrimp", 6], "Kanikama": ["barrita", "barritas", "stick", "sticks", 17], "Huevo entero": ["huevo", "huevos", "egg", "eggs", 50], "Clara de huevo": ["clara", "claras", "egg white", "egg whites", 33], "Huevo duro": ["huevo", "huevos", "egg", "eggs", 50], "Huevo frito": ["huevo", "huevos", "egg", "eggs", 46], "Huevos revueltos": ["huevo", "huevos", "egg", "eggs", 61], "Leche entera": ["vaso", "vasos", "glass", "glasses", 200], "Leche semidescremada": ["vaso", "vasos", "glass", "glasses", 200], "Leche descremada": ["vaso", "vasos", "glass", "glasses", 200], "Leche con chocolate": ["vaso", "vasos", "glass", "glasses", 200], "Yogur natural": ["pote", "potes", "cup", "cups", 125], "Yogur con sabor": ["pote", "potes", "cup", "cups", 125], "Yogur protein": ["pote", "potes", "cup", "cups", 155], "Yogur griego natural": ["pote", "potes", "cup", "cups", 170], "Queso gauda": ["lámina", "láminas", "slice", "slices", 15], "Queso mantecoso": ["lámina", "láminas", "slice", "slices", 15], "Queso mozzarella": ["lámina", "láminas", "slice", "slices", 20], "Queso crema": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 15], "Proteína whey en polvo (aprox.)": ["scoop", "scoops", "scoop", "scoops", 30], "Almendras": ["puñado", "puñados", "handful", "handfuls", 30], "Nueces": ["puñado", "puñados", "handful", "handfuls", 30], "Maní tostado": ["puñado", "puñados", "handful", "handfuls", 30], "Castañas de cajú": ["puñado", "puñados", "handful", "handfuls", 30], "Pistachos": ["puñado", "puñados", "handful", "handfuls", 30], "Mix de frutos secos": ["puñado", "puñados", "handful", "handfuls", 30], "Mantequilla de maní": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 16], "Semillas de chía": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 12], "Linaza": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 10], "Aceite de oliva": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 13], "Aceite vegetal": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 13], "Mantequilla": ["cucharadita", "cucharaditas", "teaspoon", "teaspoons", 5], "Margarina": ["cucharadita", "cucharaditas", "teaspoon", "teaspoons", 5], "Mayonesa": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 14], "Mayonesa light": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 14], "Ketchup": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 17], "Mostaza": ["cucharadita", "cucharaditas", "teaspoon", "teaspoons", 5], "Salsa de soya": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 16], "Crema de leche": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 15], "Jugo de naranja natural": ["vaso", "vasos", "glass", "glasses", 250], "Néctar de fruta": ["vaso", "vasos", "glass", "glasses", 250], "Bebida cola": ["lata", "latas", "can", "cans", 350], "Bebida cola zero": ["lata", "latas", "can", "cans", 350], "Bebida isotónica": ["botella", "botellas", "bottle", "bottles", 500], "Café negro": ["taza", "tazas", "cup", "cups", 240], "Café con leche": ["taza", "tazas", "cup", "cups", 250], "Té": ["taza", "tazas", "cup", "cups", 240], "Cerveza": ["lata", "latas", "can", "cans", 350], "Vino tinto": ["copa", "copas", "glass", "glasses", 150], "Pisco sour": ["vaso", "vasos", "glass", "glasses", 120], "Mote con huesillo": ["vaso", "vasos", "glass", "glasses", 300], "Empanada de pino": ["empanada", "empanadas", "empanada", "empanadas", 220], "Empanada de queso frita": ["empanada", "empanadas", "empanada", "empanadas", 100], "Completo italiano": ["completo", "completos", "hot dog", "hot dogs", 250], "Churrasco italiano": ["sándwich", "sándwiches", "sandwich", "sandwiches", 300], "Barros Luco": ["sándwich", "sándwiches", "sandwich", "sandwiches", 250], "Sándwich de jamón y queso": ["sándwich", "sándwiches", "sandwich", "sandwiches", 150], "Humita": ["humita", "humitas", "humita", "humitas", 200], "Sopaipilla": ["sopaipilla", "sopaipillas", "sopaipilla", "sopaipillas", 50], "Pizza de queso": ["trozo", "trozos", "slice", "slices", 110], "Pizza de pepperoni": ["trozo", "trozos", "slice", "slices", 110], "Hamburguesa con queso": ["hamburguesa", "hamburguesas", "burger", "burgers", 180], "Pollo apanado (nuggets)": ["nugget", "nuggets", "nugget", "nuggets", 17], "Sushi (roll)": ["pieza", "piezas", "piece", "pieces", 25], "Milanesa de vacuno": ["milanesa", "milanesas", "cutlet", "cutlets", 150], "Cazuela de vacuno": ["plato", "platos", "bowl", "bowls", 500], "Cazuela de ave": ["plato", "platos", "bowl", "bowls", 500], "Porotos con riendas": ["plato", "platos", "plate", "plates", 350], "Porotos granados": ["plato", "platos", "plate", "plates", 350], "Lentejas guisadas": ["plato", "platos", "plate", "plates", 350], "Pastel de choclo": ["porción", "porciones", "serving", "servings", 350], "Charquicán": ["plato", "platos", "plate", "plates", 350], "Pollo con arroz": ["plato", "platos", "plate", "plates", 400], "Tallarines con salsa boloñesa": ["plato", "platos", "plate", "plates", 350], "Lasaña": ["porción", "porciones", "serving", "servings", 300], "Arroz chaufa": ["plato", "platos", "plate", "plates", 300], "Papas fritas": ["porción", "porciones", "serving", "servings", 120], "Galletas con chips de chocolate": ["galleta", "galletas", "cookie", "cookies", 15], "Galletas de mantequilla": ["galleta", "galletas", "cookie", "cookies", 8], "Barra de cereal": ["barra", "barras", "bar", "bars", 25], "Barra de proteína": ["barra", "barras", "bar", "bars", 50], "Alfajor": ["alfajor", "alfajores", "alfajor", "alfajores", 50], "Calzones rotos": ["unidad", "unidades", "piece", "pieces", 40], "Berlín": ["berlín", "berlines", "doughnut", "doughnuts", 90], "Donut glaseada": ["donut", "donuts", "doughnut", "doughnuts", 60], "Queque": ["trozo", "trozos", "slice", "slices", 60], "Torta de chocolate": ["trozo", "trozos", "slice", "slices", 100], "Kuchen de manzana": ["trozo", "trozos", "slice", "slices", 100], "Pan de pascua": ["trozo", "trozos", "slice", "slices", 60], "Helado de crema": ["bola", "bolas", "scoop", "scoops", 70], "Azúcar": ["cucharadita", "cucharaditas", "teaspoon", "teaspoons", 5], "Miel": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 20], "Mermelada": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 15], "Manjar": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 20], "Leche condensada": ["cucharada", "cucharadas", "tablespoon", "tablespoons", 20], "Chocolate de leche": ["cuadrito", "cuadritos", "square", "squares", 5], "Chocolate amargo 70%": ["cuadrito", "cuadritos", "square", "squares", 5]};
 /* Alimentos básicos (232): por 100 g (bebidas por 100 ml). Valores de referencia; los marcados con 1 son promedios aproximados. */
@@ -384,14 +384,28 @@ const IC={
   pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19z"/></svg>',
   text:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M5 11h14M5 16h9"/></svg>',
   keys:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg>',
-  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>'
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.6 5.4 3.6 8.5s-1.1 5.9-3.6 8.5c-2.5-2.6-3.6-5.4-3.6-8.5S9.5 6.1 12 3.5z"/></svg>',
+  ruler:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="2"/><path d="M7 8v3M11 8v4M15 8v3M19 8v4"/></svg>',
+  drop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5s6 6.4 6 10.6a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 5.4L19 10l-5.1 1.6L12 17l-1.9-5.4L5 10l5.1-1.6z"/><path d="M18.5 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>',
+  target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.6v.1"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>',
+  logo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-5.3-7.5 3 3 0 0 0 4.8 3.9c.3 1.1.5 2.3.5 3.6z"/></svg>',
+  refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/></svg>',
+  db:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15M10 7V4.5h4V7M6.5 7l1 13h9l1-13"/></svg>',
 };
 
 /* ---------- render ---------- */
 function render(){
-  $("#viewHoy").hidden=S.tab!=="hoy";$("#viewYo").hidden=S.tab!=="yo";
+  $("#viewHoy").hidden=S.tab!=="hoy";$("#viewYo").hidden=S.tab!=="yo";$("#viewPeso").hidden=S.tab!=="peso";$("#viewAj").hidden=S.tab!=="aj";
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"page":"false"));
-  if(S.tab==="hoy") renderHoy(); else renderYo();
+  if(S.tab==="hoy") renderHoy(); else if(S.tab==="peso") renderPeso(); else if(S.tab==="aj") renderAjustes(); else renderYo();
 }
 function dateTitle(d){
   const t=today();
@@ -529,28 +543,14 @@ function renderYo(){
       <section class="card me"><div class="avatar">${avatarSVG({sex:p.sex,height:p.height,weight:p.weight})}</div><dl class="stats">${stats}</dl></section>
       <section class="card">${goalHTML}</section>
       <section class="card">
-        <div class="spread"><span class="label">${tr("Registrar peso","Log weight")}</span><span class="muted" style="font-size:12px">${(p.weights||[]).length} ${tr("registros","entries")}</span></div>
-        <div class="row" style="margin-top:10px"><input id="wIn" class="input" type="number" inputmode="decimal" step="0.1" placeholder="${fmt1(wDisp(p.weight))} ${wUnit}" aria-label="${tr("Peso de hoy en","Today's weight in")} ${wUnit}"><button class="btn" style="width:auto;padding:0 18px" data-act="logW">${tr("Guardar","Save")}</button></div>
+        <div class="spread"><span class="label">${tr("Peso del plan","Plan weight")}</span><span class="muted" style="font-size:12px">${(p.weights||[]).length} ${tr("cambios","updates")}</span></div>
+        <p class="muted" style="font-size:13px;margin:6px 0 0">${tr("Úsalo cuando quieras recalcular tus calorías y macros. Para pesarte a diario usa la pestaña <b style=\"color:var(--ink)\">Peso</b>.","Use it when you want to recalculate your calories and macros. For daily weigh-ins use the <b style=\"color:var(--ink)\">Weight</b> tab.")}</p>
+        <div class="row" style="margin-top:10px"><input id="wIn" class="input" type="number" inputmode="decimal" step="0.1" placeholder="${fmt1(wDisp(p.weight))} ${wUnit}" aria-label="${tr("Peso de hoy en","Today's weight in")} ${wUnit}"><button class="btn" style="width:auto;padding:0 18px" data-act="logW">${tr("Actualizar","Update")}</button></div>
         ${sparkline(p.weights||[])}
       </section>
       <section class="card"><div class="spread"><span class="label">${tr("Últimos 7 días","Last 7 days")}</span><span class="muted" style="font-size:12px">${tr("Toca una barra","Tap a bar")}</span></div><div class="dsel" id="weekSel"></div><div id="week" class="bars" aria-label="${tr("Calorías de los últimos 7 días","Calories over the last 7 days")}"></div></section>
       <section class="card"><div class="spread"><span class="label" id="calTitle"></span><div class="pm"><button data-act="calnav" data-d="-1" aria-label="${tr("Mes anterior","Previous month")}">‹</button><button data-act="calnav" data-d="1" aria-label="${tr("Mes siguiente","Next month")}">›</button></div></div><div id="cal" class="cal"></div><div class="dsel" id="calSel"></div>
         <div class="calkey"><span><i class="dot acc"></i>${tr("Hoy","Today")}</span><span><i class="dot"></i>${tr("Últimos 7 días","Last 7 days")}</span><span><i class="dot hollow"></i>${tr("Sin registro","Nothing logged")}</span></div></section>
-      <section class="card stack">
-        <span class="label">${tr("Ajustes","Settings")}</span>
-        <div class="field"><label for="pGlass">${tr("Tamaño de tu vaso","Your glass size")}</label><select id="pGlass" class="input" data-prof="glass">${opt(IMP?[[237,"8 oz"],[355,"12 oz"],[473,tr("16 oz (botella)","16 oz (bottle)")],[591,tr("20 oz (botella)","20 oz (bottle)")]]:[[200,"200 ml"],[250,"250 ml"],[300,"300 ml"],[500,tr("500 ml (botella)","500 ml (bottle)")]],p.glass||(IMP?237:250))}</select></div>
-        <div class="field"><label for="pUnits">${tr("Unidades","Units")}</label><select id="pUnits" class="input">${[["auto",tr("Automático (según tu país)","Automatic (by your country)")+" · "+(IMP?tr("libras y pies","pounds and feet"):tr("kilos y cm","kg and cm"))],["metric",tr("Kilos y centímetros","Kilograms and centimeters")],["imperial",tr("Libras, pies y onzas","Pounds, feet and ounces")]].map(([v,l])=>`<option value="${v}" ${unitsPref()===v?"selected":""}>${l}</option>`).join("")}</select></div>
-        <div class="field"><label for="pLang">${tr("Idioma","Language")}</label><select id="pLang" class="input">${[["auto",tr("Automático (idioma del teléfono)","Automatic (phone language)")],["es","Español"],["en","English"]].map(([v,l])=>`<option value="${v}" ${langPref()===v?"selected":""}>${l}</option>`).join("")}</select></div>
-        <div class="spread" style="font-size:12px;color:var(--muted);padding-top:4px"><span>${tr("Versión de la app","App version")}</span><span style="font-family:var(--mono)">v${APP_VERSION}</span></div>
-        <button class="setrow" data-act="aisetup"><span>${tr("IA para fotos","AI for photos")} <small>${tr("opcional","optional")}</small></span><span class="muted">${aiProvider()?PROV_NAME[aiProvider()]+tr(" conectada"," connected"):tr("Sin conectar","Not connected")} ›</span></button>
-      </section>
-      <section class="card stack">
-        <span class="label">${tr("Respaldo","Backup")}</span>
-        <p class="muted" style="font-size:13px;margin:0">${tr(`Tus datos se guardan solo en este teléfono (${nDays} ${nDays===1?"día registrado":"días registrados"}). Exporta un respaldo de vez en cuando, o antes de cambiar de teléfono.`,`Your data is stored only on this phone (${nDays} ${nDays===1?"day logged":"days logged"}). Export a backup now and then, or before switching phones.`)}</p>
-        <div class="grid2"><button class="btn ghost" data-act="export">${tr("Exportar","Export")}</button><label for="fImport" class="btn ghost" style="display:grid;place-items:center">${tr("Importar archivo","Import file")}</label></div>
-        <button class="btn ghost" data-act="paste">${tr("Pegar respaldo como texto","Paste backup as text")}</button>
-      </section>
-      <p class="foot">${tr(`Metabolismo en reposo con la fórmula Mifflin-St Jeor, multiplicado por tu actividad diaria más tus entrenamientos. Para cambiar 1 kg se estiman 7.700 kcal. Proteína según tu objetivo y tipo de entrenamiento (${fmt1(t.ppk)} g por kg), grasa mínimo 25 % de las calorías y el resto en carbohidratos. Agua 35 ml por kg, más 0,5 L los días de entreno. Son estimaciones: si en 2–3 semanas tu peso no se mueve como esperas, rehaz el test o ajusta tu ritmo.<br>Datos de productos: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="color:inherit">Open Food Facts</a>, bajo licencia ODbL. La lista de alimentos de la app usa valores de referencia; los platos preparados son promedios aproximados.`,`Resting metabolism uses the Mifflin-St Jeor formula, multiplied by your daily activity plus your workouts. Changing 1 kg is estimated at 7,700 kcal. Protein depends on your goal and training type (${fmt1(t.ppk)} g per kg), fat is at least 25% of calories and carbs make up the rest. Water: 35 ml per kg, plus 0.5 L on workout days. These are estimates: if your weight doesn't move as expected in 2–3 weeks, retake the quiz or adjust your pace.<br>Product data: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="color:inherit">Open Food Facts</a>, under the ODbL license. The app's food list uses reference values; prepared meals are approximate averages.`)}</p>
     </div>`;
   loadWeek();loadCal();
 }
@@ -1407,7 +1407,7 @@ function openAiSetup(){
 /* ---------- respaldo ---------- */
 function exportData(){
   const days={};Object.keys(localStorageKeys()).forEach(d=>{const v=lsGet("day-"+d);if(v)days[d]=v});
-  return{app:"bocado",v:1,exported:new Date().toISOString(),profile:S.profile,foods:S.foods,days};
+  return{app:"bocado",v:1,exported:new Date().toISOString(),profile:S.profile,foods:S.foods,days,wlog:S.wlog};
 }
 async function doExport(){
   const json=JSON.stringify(exportData());
@@ -1435,6 +1435,7 @@ function importData(text){
   }
   saveProfile();
   if(j.foods&&typeof j.foods==="object"){Object.entries(j.foods).forEach(([k,f])=>{if(f&&f.per100)S.foods[k]={...(S.foods[k]||{}),...f}});saveFoods()}
+  if(j.wlog&&typeof j.wlog==="object"){Object.entries(j.wlog).forEach(([d,kg])=>{if(/^\d{4}-\d{2}-\d{2}$/.test(d)&&num(kg)>25&&!S.wlog[d])S.wlog[d]=num(kg)});saveWlog()}
   let n=0;
   if(j.days&&typeof j.days==="object"){
     Object.entries(j.days).forEach(([d,v])=>{
@@ -1462,6 +1463,169 @@ function logWeight(v){
   saveProfile();render();toast(tr("Peso guardado","Weight saved"));
 }
 
+/* ---------- registro diario de peso (independiente del plan) ---------- */
+function saveWlog(){lsSet("wlog",S.wlog)}
+const wlogList=()=>Object.entries(S.wlog||{}).filter(([d,kg])=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&num(kg)>0).map(([d,kg])=>({d,kg:num(kg)})).sort((a,b)=>a.d<b.d?-1:1);
+const wIn=v=>IMP?Math.round(num(v)/KG2LB*1000)/1000:r1(num(v));
+const fmtWv=kg=>fmt1(wDisp(kg));
+function wDelta(kg){const v=wDisp(kg),s=Math.abs(v)<0.05?"±":v>0?"+":"−";return `${s}${fmt1(Math.abs(v))}`}
+function wAt(list,d){let r=null;for(const x of list){if(x.d<=d)r=x;else break}return r}
+function shortDate(d){return new Intl.DateTimeFormat(LOC,{day:"numeric",month:"short"}).format(parseD(d)).replace(".","")}
+function wChart(list,range){
+  const t=today(),from=range==="all"?(list[0]?list[0].d:t):addDays(t,-({"7":6,"30":29,"90":89}[range]||29));
+  const pts=list.filter(x=>x.d>=from);
+  if(pts.length<2)return `<div class="wempty">${tr("Registra tu peso al menos dos días para ver la curva.","Log your weight on at least two days to see the curve.")}</div>`;
+  const W=340,H=150,PL=4,PR=4,PT=12,PB=22;
+  const d0=parseD(pts[0].d).getTime(),d1=parseD(pts[pts.length-1].d).getTime(),span=Math.max(1,d1-d0);
+  const goal=S.profile&&S.profile.targetWeight&&S.profile.goalType!=="maintain"?S.profile.targetWeight:null;
+  const vals=pts.map(x=>x.kg);let mn=Math.min(...vals),mx=Math.max(...vals);
+  if(goal&&Math.abs(goal-mn)<3&&goal<mn)mn=goal;if(goal&&Math.abs(goal-mx)<3&&goal>mx)mx=goal;
+  const pad=Math.max(0.3,(mx-mn)*0.15);mn-=pad;mx+=pad;
+  const X=d=>PL+(parseD(d).getTime()-d0)/span*(W-PL-PR),Y=kg=>PT+(1-(kg-mn)/(mx-mn))*(H-PT-PB);
+  const path=pts.map((x,i)=>`${i?"L":"M"}${X(x.d).toFixed(1)} ${Y(x.kg).toFixed(1)}`).join(" ");
+  const area=`${path} L${X(pts[pts.length-1].d).toFixed(1)} ${H-PB} L${X(pts[0].d).toFixed(1)} ${H-PB} Z`;
+  const last=pts[pts.length-1],hi=pts.reduce((a,b)=>b.kg>a.kg?b:a),lo=pts.reduce((a,b)=>b.kg<a.kg?b:a);
+  const gl=goal&&goal>=mn&&goal<=mx?`<line x1="0" x2="${W}" y1="${Y(goal).toFixed(1)}" y2="${Y(goal).toFixed(1)}" class="wgoal"/><text x="${W-2}" y="${(Y(goal)-4).toFixed(1)}" text-anchor="end" class="wlbl">${tr("Meta","Goal")} ${fmtWv(goal)}</text>`:"";
+  return `<svg viewBox="0 0 ${W} ${H}" class="wsvg" role="img" aria-label="${tr("Evolución de tu peso","Your weight over time")}">
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    ${gl}<path d="${area}" fill="url(#wg)"/><path d="${path}" class="wline"/>
+    ${pts.length<=31?pts.map(x=>`<circle cx="${X(x.d).toFixed(1)}" cy="${Y(x.kg).toFixed(1)}" r="2.2" class="wpt"/>`).join(""):""}
+    <circle cx="${X(last.d).toFixed(1)}" cy="${Y(last.kg).toFixed(1)}" r="4.5" class="wlast"/>
+    <text x="${X(hi.d).toFixed(1)}" y="${(Y(hi.kg)-7).toFixed(1)}" text-anchor="middle" class="wlbl">${fmtWv(hi.kg)}</text>
+    ${lo!==hi?`<text x="${X(lo.d).toFixed(1)}" y="${(Y(lo.kg)+14).toFixed(1)}" text-anchor="middle" class="wlbl">${fmtWv(lo.kg)}</text>`:""}
+    <text x="${PL}" y="${H-5}" class="wax">${shortDate(pts[0].d)}</text><text x="${W-PR}" y="${H-5}" text-anchor="end" class="wax">${shortDate(last.d)}</text>
+  </svg>`;
+}
+function renderPeso(){
+  const list=wlogList(),t=today(),cur=list[list.length-1],todayV=S.wlog[t];
+  const sel=S.wDate&&S.wDate<=t?S.wDate:t,selV=S.wlog[sel];
+  const pre=selV||(wAt(list,sel)||cur||{}).kg||S.profile.weight||null;
+  const range=S.wRange||"30";
+  const st=(l,v,u)=>`<div class="wst"><span>${l}</span><b>${v}</b>${u?`<small>${u}</small>`:""}</div>`;
+  let stats="";
+  if(cur){
+    const ago=n=>{const r=wAt(list,addDays(cur.d,-n));return r&&r.d!==cur.d?cur.kg-r.kg:null};
+    const last7=list.filter(x=>x.d>addDays(t,-7)),avg=last7.length?last7.reduce((a,x)=>a+x.kg,0)/last7.length:null;
+    const c7=ago(7),c30=ago(30);
+    stats=`<section class="card"><div class="wstats">${st(tr("Actual","Current"),fmtWv(cur.kg),wUnit)}${st(tr("Promedio 7 días","7-day average"),avg?fmtWv(avg):"—",avg?wUnit:"")}${st(tr("Cambio 7 días","7-day change"),c7==null?"—":wDelta(c7),c7==null?"":wUnit)}${st(tr("Cambio 30 días","30-day change"),c30==null?"—":wDelta(c30),c30==null?"":wUnit)}</div></section>`;
+  }
+  const rows=[...list].reverse();
+  const shown=S.wAll?rows:rows.slice(0,14);
+  const hist=rows.length?`<section class="card"><div class="spread"><span class="label">${tr("Registros","Entries")}</span><span class="muted" style="font-size:12px">${rows.length}</span></div>
+    <div class="list wlist">${shown.map((x,i)=>{const prev=rows[rows.indexOf(x)+1];const dv=prev?x.kg-prev.kg:null;
+      return `<button class="li" data-act="wedit" data-d="${x.d}"><div><div>${esc(cap1(dateTitle(x.d)))}</div>${x.d===t||x.d===addDays(t,-1)?`<div class="muted" style="font-size:12px">${esc(shortDate(x.d))}</div>`:""}</div><span class="wv"><b>${fmtWv(x.kg)}</b> ${wUnit}${dv==null?"":`<small class="${Math.abs(dv)<0.05?"":dv>0?"up":"down"}">${wDelta(dv)}</small>`}</span></button>`}).join("")}</div>
+    ${rows.length>14?`<button class="linkbtn" data-act="wall" style="margin-top:8px">${S.wAll?tr("Ver menos","Show less"):tr(`Ver los ${rows.length} registros`,`Show all ${rows.length} entries`)}</button>`:""}</section>`:"";
+  $("#viewPeso").innerHTML=`
+    <header class="top"><span></span><div><span class="label">${tr("Registro diario","Daily log")}</span><h1>${tr("Peso","Weight")}</h1></div><span></span></header>
+    <div class="stack">
+      <section class="card wtoday">
+        <div class="spread"><span class="label">${sel===t?(todayV?tr("Registrado hoy","Logged today"):tr("Peso de hoy","Today's weight")):tr("Peso del","Weight for")+" "+esc(shortDate(sel))}</span>
+          <label class="wdate">${IC.cal}<span>${sel===t?tr("Hoy","Today"):esc(shortDate(sel))}</span><input type="date" id="wDate" max="${t}" value="${sel}" aria-label="${tr("Fecha del registro","Entry date")}"></label></div>
+        <div class="stepper wstep"><button data-act="wstep" data-d="-1" aria-label="${tr("Menos","Less")}">−</button><input id="wVal" type="number" inputmode="decimal" step="0.1" value="${pre?fmt1(wDisp(pre)).replace(",","."):""}" placeholder="—" aria-label="${tr("Peso en","Weight in")} ${wUnit}"><button data-act="wstep" data-d="1" aria-label="${tr("Más","More")}">+</button></div>
+        <p class="unitline">${wUnit==="kg"?tr("kilos","kilograms"):tr("libras","pounds")}</p>
+        <button class="btn" data-act="wsave">${selV?tr("Actualizar","Update"):tr("Guardar","Save")}</button>
+        <p class="foot" style="text-align:center;margin-top:10px">${tr("Pésate en la mañana, después del baño y antes de comer. Este registro no cambia tus calorías.","Weigh yourself in the morning, after the bathroom and before eating. This log doesn't change your calories.")}</p>
+      </section>
+      ${stats}
+      <section class="card"><div class="spread"><span class="label">${tr("Tendencia","Trend")}</span><div class="seg sm" id="wRange">${[["7","7D"],["30","30D"],["90","90D"],["all",tr("Todo","All")]].map(([v,l])=>`<button data-act="wrange" data-r="${v}" aria-pressed="${v===range}">${l}</button>`).join("")}</div></div>
+        <div style="margin-top:10px">${wChart(list,range)}</div></section>
+      ${hist}
+    </div>`;
+}
+function saveWeightEntry(d,v){
+  const kg=wIn(v);if(!(kg>25&&kg<400)){toast(tr("Ingresa un peso válido en ","Enter a valid weight in ")+wUnit);return false}
+  S.wlog[d]=kg;saveWlog();return true;
+}
+function openWeightEdit(d){
+  const kg=S.wlog[d];if(!kg)return;
+  openSheet(`<h2>${esc(cap1(dateTitle(d)))}</h2><p class="muted" style="font-size:13px">${esc(new Intl.DateTimeFormat(LOC,{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(parseD(d)))}</p>
+    <div class="stack" style="margin-top:14px"><div class="stepper wstep"><button data-q="-1">−</button><input id="weV" type="number" inputmode="decimal" step="0.1" value="${fmt1(wDisp(kg)).replace(",",".")}" aria-label="${tr("Peso en","Weight in")} ${wUnit}"><button data-q="1">+</button></div><p class="unitline">${wUnit}</p>
+    <button class="btn" id="weOk">${tr("Guardar cambios","Save changes")}</button><button class="btn danger" id="weDel">${tr("Eliminar registro","Delete entry")}</button></div>`,root=>{
+    const inp=root.querySelector("#weV");
+    root.querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>{inp.value=(Math.round((num(inp.value)+0.1*Number(b.dataset.q))*10)/10).toFixed(1)}));
+    root.querySelector("#weOk").addEventListener("click",()=>{if(saveWeightEntry(d,inp.value)){closeSheet();render();toast(tr("Registro actualizado","Entry updated"))}});
+    root.querySelector("#weDel").addEventListener("click",()=>{delete S.wlog[d];saveWlog();closeSheet();render();toast(tr("Registro eliminado","Entry deleted"))});
+  });
+}
+
+/* ---------- ajustes ---------- */
+const GLASSES=()=>IMP?[[237,"8 oz"],[355,"12 oz"],[473,tr("16 oz (botella)","16 oz (bottle)")],[591,tr("20 oz (botella)","20 oz (bottle)")]]:[[200,"200 ml"],[250,"250 ml"],[300,"300 ml"],[500,tr("500 ml (botella)","500 ml (bottle)")]];
+const LANGS=()=>[["auto",tr("Automático","Automatic"),tr("Usa el idioma del teléfono","Uses your phone's language")],["es","Español",""],["en","English",""]];
+const UNITSO=()=>[["auto",tr("Automático","Automatic"),tr("Según tu país","Based on your country")+" · "+(CC==="us"?tr("libras y pies","pounds and feet"):tr("kilos y cm","kg and cm"))],["metric",tr("Métrico","Metric"),tr("Kilos, centímetros y litros","Kilograms, centimeters and liters")],["imperial",tr("Imperial","Imperial"),tr("Libras, pies y onzas","Pounds, feet and ounces")]];
+function openPicker(title,opts,cur,onPick,note){
+  openSheet(`<h2>${esc(title)}</h2>${note?`<p class="muted" style="font-size:13px">${esc(note)}</p>`:""}<div class="pick">${opts.map(([v,l,sub])=>`<button class="pickrow" data-v="${esc(String(v))}" aria-pressed="${String(v)===String(cur)}"><span><span>${esc(l)}</span>${sub?`<small>${esc(sub)}</small>`:""}</span><i>${IC.check}</i></button>`).join("")}</div>`,root=>{
+    root.querySelectorAll(".pickrow").forEach(b=>b.addEventListener("click",()=>{
+      root.querySelectorAll(".pickrow").forEach(x=>x.setAttribute("aria-pressed",x===b));
+      setTimeout(()=>onPick(b.dataset.v),120);
+    }));
+  });
+}
+function srow(act,icon,tone,title,value,extra){
+  return `<button class="srow" data-act="${act}"${extra||""}><span class="sic ${tone}">${icon}</span><span class="stx">${title}</span><span class="sval">${value||""}</span><span class="schev">${IC.right}</span></button>`;
+}
+function renderAjustes(){
+  const p=S.profile,nDays=Object.keys(localStorageKeys()).length,nW=wlogList().length;
+  const langNow=langPref()==="auto"?tr("Automático","Automatic")+" · "+(LANG==="es"?"Español":"English"):(LANG==="es"?"Español":"English");
+  const unitsNow=unitsPref()==="auto"?tr("Automático","Automatic"):unitsPref()==="metric"?tr("Métrico","Metric"):"Imperial";
+  const glass=(GLASSES().find(g=>g[0]===Number(p.glass||(IMP?237:250)))||GLASSES()[1])[1];
+  const ai=aiProvider();
+  $("#viewAj").innerHTML=`
+    <header class="top"><span></span><div><span class="label">Bocado</span><h1>${tr("Ajustes","Settings")}</h1></div><span></span></header>
+    <div class="stack sgroups">
+      <div><span class="label sl">${tr("Preferencias","Preferences")}</span><section class="card sg">
+        ${srow("set-lang",IC.globe,"t1",tr("Idioma","Language"),langNow)}
+        ${srow("set-units",IC.ruler,"t2",tr("Unidades","Units"),unitsNow)}
+        ${srow("set-glass",IC.drop,"t3",tr("Tamaño del vaso","Glass size"),glass)}
+      </section></div>
+      <div><span class="label sl">${tr("Inteligencia artificial","Artificial intelligence")}</span><section class="card sg">
+        ${srow("aisetup",IC.spark,"t4",tr("IA para fotos","AI for photos"),ai?PROV_NAME[ai]:tr("Opcional","Optional"))}
+      </section><p class="foot sfoot">${tr("Sirve para describir comidas, analizar fotos de platos y leer tablas nutricionales. Usa tu propia llave gratuita.","Used to describe meals, analyze meal photos and read nutrition labels. It uses your own free key.")}</p></div>
+      <div><span class="label sl">${tr("Tu plan","Your plan")}</span><section class="card sg">
+        ${srow("onb",IC.target,"t5",tr("Rehacer el test","Retake the quiz"),p.onboarded?"":tr("Pendiente","Pending"))}
+        ${srow("set-how",IC.info,"t2",tr("Cómo se calcula tu plan","How your plan is calculated"),"")}
+      </section></div>
+      <div><span class="label sl">${tr("Tus datos","Your data")}</span><section class="card sg">
+        ${srow("export",IC.up,"t1",tr("Exportar respaldo","Export backup"),"")}
+        ${srow("set-import",IC.down,"t1",tr("Importar respaldo","Import backup"),"")}
+      </section><p class="foot sfoot">${tr(`Todo se guarda solo en este teléfono: ${nDays} ${nDays===1?"día":"días"} de comidas y ${nW} ${nW===1?"registro":"registros"} de peso. Exporta un respaldo de vez en cuando o antes de cambiar de teléfono.`,`Everything is stored only on this phone: ${nDays} ${nDays===1?"day":"days"} of meals and ${nW} weight ${nW===1?"entry":"entries"}. Export a backup now and then, or before switching phones.`)}</p></div>
+      <div><span class="label sl">${tr("Acerca de","About")}</span><section class="card sg">
+        <div class="srow static"><span class="sic t5">${IC.logo}</span><span class="stx">${tr("Versión","Version")}</span><span class="sval mono">${APP_VERSION}</span></div>
+        ${srow("set-update",IC.refresh,"t3",tr("Buscar actualizaciones","Check for updates"),"")}
+        <a class="srow" href="https://world.openfoodfacts.org" target="_blank" rel="noopener"><span class="sic t2">${IC.db}</span><span class="stx">${tr("Productos","Products")}</span><span class="sval">Open Food Facts</span><span class="schev">${IC.right}</span></a>
+      </section></div>
+      <section class="card sg">${srow("set-wipe",IC.trash,"t6 danger",`<span class="dangertx">${tr("Borrar todos los datos","Delete all data")}</span>`,"")}</section>
+      <p class="foot" style="text-align:center;margin-top:6px">Bocado ${APP_VERSION}</p>
+    </div>`;
+}
+function openHow(){
+  const t=targets(S.profile);
+  openSheet(`<h2>${tr("Cómo se calcula tu plan","How your plan is calculated")}</h2><div class="how">${tr(`<p><b>Calorías.</b> Metabolismo en reposo con la fórmula Mifflin-St Jeor, multiplicado por tu actividad diaria más tus entrenamientos. Para cambiar 1 kg se estiman 7.700 kcal.</p><p><b>Macros.</b> Proteína según tu objetivo y tipo de entrenamiento${t?` (${fmt1(t.ppk)} g por kg)`:""}, grasa mínimo 25 % de las calorías y el resto en carbohidratos.</p><p><b>Agua.</b> 35 ml por kg, más 0,5 L los días de entreno.</p><p><b>Ajustes.</b> Son estimaciones: si en 2–3 semanas tu peso no se mueve como esperas, rehaz el test o ajusta tu ritmo.</p><p class="muted">Datos de productos: Open Food Facts, bajo licencia ODbL. La lista de alimentos usa valores de referencia; los platos preparados son promedios aproximados.</p>`,`<p><b>Calories.</b> Resting metabolism uses the Mifflin-St Jeor formula, multiplied by your daily activity plus your workouts. Changing 1 kg is estimated at 7,700 kcal.</p><p><b>Macros.</b> Protein depends on your goal and training type${t?` (${fmt1(t.ppk)} g per kg)`:""}, fat is at least 25% of calories and carbs make up the rest.</p><p><b>Water.</b> 35 ml per kg, plus 0.5 L on workout days.</p><p><b>Adjusting.</b> These are estimates: if your weight doesn't move as expected in 2–3 weeks, retake the quiz or adjust your pace.</p><p class="muted">Product data: Open Food Facts, under the ODbL license. The food list uses reference values; prepared meals are approximate averages.</p>`)}</div>`);
+}
+function openImport(){
+  openSheet(`<h2>${tr("Importar respaldo","Import backup")}</h2><p class="muted" style="font-size:13px">${tr("Se suma a lo que ya tienes; no borra nada.","It's added to what you already have; nothing is deleted.")}</p>
+    <div class="stack" style="margin-top:12px"><label for="fImport" class="btn" style="display:grid;place-items:center">${tr("Elegir archivo","Choose file")}</label><button class="btn ghost" data-act="paste">${tr("Pegar respaldo como texto","Paste backup as text")}</button></div>`);
+}
+function openWipe(){
+  openSheet(`<h2>${tr("¿Borrar todos los datos?","Delete all data?")}</h2><p class="muted">${tr("Se borran tu perfil, tus comidas, tus alimentos guardados y tu registro de peso de este teléfono. No se puede deshacer.","Your profile, meals, saved foods and weight log will be deleted from this phone. This can't be undone.")}</p>
+    <div class="stack" style="margin-top:14px"><button class="btn ghost" data-act="export">${tr("Exportar respaldo primero","Export a backup first")}</button><button class="btn danger" id="wipeOk">${tr("Borrar todo","Delete everything")}</button></div>`,root=>{
+    root.querySelector("#wipeOk").addEventListener("click",()=>{
+      try{const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(P))ks.push(k)}ks.forEach(k=>localStorage.removeItem(k))}catch(e){}
+      location.reload();
+    });
+  });
+}
+async function checkUpdate(){
+  toast(tr("Buscando actualizaciones…","Checking for updates…"));
+  try{
+    const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
+    if(!reg){location.reload();return}
+    await reg.update();
+    await sleep(800);
+    if(reg.installing||reg.waiting){toast(tr("Actualizando…","Updating…"));setTimeout(()=>location.reload(),1500)}
+    else toast(tr("Ya tienes la última versión","You're on the latest version"));
+  }catch(e){toast(tr("No pude revisar. ¿Tienes internet?","Couldn't check. Are you online?"))}
+}
+
 /* ---------- eventos ---------- */
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-act]");if(!el)return;
@@ -1482,6 +1646,18 @@ document.addEventListener("click",e=>{
   if(a==="train"){const d=day();d.train=!d.train;saveDay();render();return}
   if(a==="setupW"){logWeight($("#setupW").value);return}
   if(a==="logW"){logWeight($("#wIn").value);return}
+  if(a==="wstep"){const i=$("#wVal");const v=num(i.value)||num(i.placeholder)||0;i.value=(Math.round((v+0.1*Number(el.dataset.d))*10)/10).toFixed(1);return}
+  if(a==="wsave"){const d=S.wDate&&S.wDate<=today()?S.wDate:today();const had=!!S.wlog[d];if(saveWeightEntry(d,$("#wVal").value)){render();toast(had?tr("Registro actualizado","Entry updated"):tr("Peso guardado","Weight saved"))}return}
+  if(a==="wrange"){S.wRange=el.dataset.r;renderPeso();return}
+  if(a==="wedit"){openWeightEdit(el.dataset.d);return}
+  if(a==="wall"){S.wAll=!S.wAll;renderPeso();return}
+  if(a==="set-lang"){openPicker(tr("Idioma","Language"),LANGS(),langPref(),v=>{if(v!==langPref())setLang(v);else closeSheet()});return}
+  if(a==="set-units"){openPicker(tr("Unidades","Units"),UNITSO(),unitsPref(),v=>{if(v!==unitsPref())setUnits(v);else closeSheet()});return}
+  if(a==="set-glass"){openPicker(tr("Tamaño del vaso","Glass size"),GLASSES().map(([v,l])=>[v,l,""]),S.profile.glass||(IMP?237:250),v=>{S.profile.glass=Number(v);saveProfile();closeSheet();render()},tr("Cada toque en el registro de agua suma un vaso de este tamaño.","Each tap in the water tracker adds one glass of this size."));return}
+  if(a==="set-how"){openHow();return}
+  if(a==="set-import"){openImport();return}
+  if(a==="set-update"){checkUpdate();return}
+  if(a==="set-wipe"){openWipe();return}
   if(a==="onb"){startOnb();return}
   if(a==="scan"){startScanner();return}
   if(a==="scanStop"){stopScanner();return}
@@ -1501,6 +1677,7 @@ document.addEventListener("click",e=>{
   if(a==="aicancel"){AI.userCancel=true;if(AI.abort)AI.abort.abort();closeSheet();return}
 });
 document.addEventListener("change",e=>{
+  if(e.target.id==="wDate"){S.wDate=e.target.value||today();renderPeso();return}
   if(e.target.id==="pLang"){setLang(e.target.value);return}
   if(e.target.id==="pUnits"){setUnits(e.target.value);return}
   const k=e.target.dataset&&e.target.dataset.prof;if(!k)return;
@@ -1511,6 +1688,7 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){if(!$("#scanner").hidden)stopScanner();else if(!$("#sheet").hidden)closeSheet()}
   if(e.key==="Enter"&&e.target.id==="setupW")logWeight(e.target.value);
   if(e.key==="Enter"&&e.target.id==="wIn")logWeight(e.target.value);
+  if(e.key==="Enter"&&e.target.id==="wVal"){e.preventDefault();e.target.blur();document.querySelector("[data-act=wsave]").click()}
 });
 $("#fBarcode").addEventListener("change",async e=>{
   const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
@@ -1700,6 +1878,7 @@ document.addEventListener("touchend",e=>{
 (function init(){
   const p=lsGet("profile");if(p)S.profile={...DEF_PROFILE,...p};
   const f=lsGet("foods");if(f&&f.items)S.foods=f.items;
+  const wl=lsGet("wlog");if(wl&&typeof wl==="object")S.wlog=wl;else{(S.profile.weights||[]).forEach(w=>{if(w&&w.d&&w.kg)S.wlog[w.d]=w.kg});if(Object.keys(S.wlog).length)saveWlog()}
   S.lastSeen=today();
   document.querySelectorAll("[data-i18n]").forEach(el=>{const v=el.getAttribute("data-i18n").split("|");el.textContent=EN?v[1]:v[0]});
   document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const v=el.getAttribute("data-i18n-aria").split("|");el.setAttribute("aria-label",EN?v[1]:v[0])});
